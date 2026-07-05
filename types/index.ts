@@ -152,3 +152,13 @@ export interface EvidenceSummary {
   riskFactors: string[];
   growthCatalysts: string[];
 }
+
+export interface ReasoningResult {
+  thesis: string;
+  decision: "Invest" | "Watch" | "Pass";
+  score: number;
+  confidence: number;
+  positives: string[];
+  negatives: string[];
+}
+

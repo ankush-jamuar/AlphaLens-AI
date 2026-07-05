@@ -52,7 +52,7 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} dark`}
       suppressHydrationWarning
     >
-      <body className="min-h-dvh bg-background text-foreground antialiased">
+      <body className="min-h-dvh bg-background text-foreground antialiased" suppressHydrationWarning>
         {children}
       </body>
     </html>
