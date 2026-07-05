@@ -2,7 +2,7 @@
 
 ## System Architecture
 
-Version 1.0
+Version: 2.0 (Frozen)
 
 ---
 
@@ -10,7 +10,7 @@ Version 1.0
 
 This document defines the software architecture for AlphaLens AI.
 
-The goal is to ensure every implementation follows the same architecture, folder responsibilities, rendering strategy, and data flow.
+It establishes the responsibilities of each layer, folder, and module, ensuring a clean separation of concerns and a maintainable codebase.
 
 This document is the architectural source of truth.
 
@@ -18,63 +18,75 @@ This document is the architectural source of truth.
 
 # High-Level Architecture
 
-```
-                User
-                  │
-                  ▼
-        Next.js Frontend
-                  │
-                  ▼
-         API Route (/analyze)
-                  │
-                  ▼
-      Investment Intelligence Pipeline
-            (LangGraph Agent)
-                  │
-        ┌─────────┼─────────┐
-        ▼         ▼         ▼
- Company Tool  Finance Tool News Tool
-        └─────────┼─────────┘
-                  ▼
-          Gemini Reasoning
-                  │
-                  ▼
-       Structured Investment Report
-                  │
-                  ▼
-            React Dashboard
-                  │
-                  ▼
-        Local History (localStorage)
+```text
+                        User
+                          │
+                          ▼
+                Investment Workspace
+                          │
+                          ▼
+                  Search Component
+                          │
+                          ▼
+                POST /api/analyze
+                          │
+                          ▼
+              LangGraph Investment Agent
+                          │
+        ┌─────────────────┼─────────────────┐
+        ▼                 ▼                 ▼
+ Company Research   Financial Analysis   News Analysis
+        │                 │                 │
+        └─────────────────┼─────────────────┘
+                          ▼
+                 Market Analysis
+                          ▼
+                Evidence Aggregation
+                          ▼
+              Investment Reasoning
+                          ▼
+             Recommendation Generator
+                          ▼
+                Report Formatter
+                          ▼
+               Structured JSON Report
+                          │
+                          ▼
+                 React Report Components
+                          │
+                          ▼
+              Browser localStorage (History)
 ```
 
 ---
 
-# Architecture Layers
+# Layered Architecture
 
-The application is divided into six layers.
+The application is divided into five independent layers.
 
 ## 1. Presentation Layer
 
 Responsible for:
 
-* UI
-* User interaction
-* Rendering reports
-* Loading states
-* Error states
+* User Interface
+* User Interaction
+* Rendering Reports
+* Loading States
+* Error States
 
-Contains:
+Folders
 
-```
+```text
 app/
-
 components/
-
-styles/
 ```
 
-No business logic.
+Rules
+
+* No business logic.
+* No API calls.
+* No prompt logic.
+* No financial calculations.
 
 ---
 
@@ -82,23 +94,22 @@ No business logic.
 
 Responsible for:
 
-* Receiving requests
+* Request validation
+* Input sanitization
+* Starting the LangGraph workflow
+* Returning structured responses
 
-* Validation
+Folder
 
-* Starting LangGraph
-
-* Returning structured report
-
-Contains:
-
-```
-app/api
+```text
+app/api/
 ```
 
-No UI.
+Rules
 
-No prompt logic.
+* Thin layer only.
+* No presentation logic.
+* No prompt definitions.
 
 ---
 
@@ -106,93 +117,90 @@ No prompt logic.
 
 Responsible for:
 
-* LangGraph
-
-* Agent
-
+* Graph construction
+* Agent orchestration
 * Node execution
+* Prompt execution
+* Investment reasoning
 
-* Prompt orchestration
+Folders
 
-Contains:
-
-```
+```text
 langgraph/
-
 nodes/
-
 prompts/
 ```
 
-No UI.
+Rules
+
+* Independent of React.
+* Independent of UI.
+* Returns structured objects only.
 
 ---
 
 ## 4. Service Layer
 
-Responsible for:
-
-External APIs.
+Responsible for all external integrations.
 
 Examples
 
-Company Search
+* Gemini
+* Financial Data API
+* Company Information API
 
-Financial API
+Folder
 
-News API
-
-Contains
-
-```
+```text
 services/
 ```
 
-Every external integration lives here.
+Rules
+
+* One service per external provider.
+* No React imports.
+* No UI knowledge.
 
 ---
 
 ## 5. Utility Layer
 
-Contains
+Responsible for reusable helpers.
 
-Formatting
+Folders
 
-Validation
-
-Helpers
-
-Constants
-
-Date formatting
-
-Score calculations
-
-Contains
-
-```
-utils/
-
+```text
 lib/
+utils/
+types/
 ```
+
+Examples
+
+* Validation
+* Formatting
+* Constants
+* Shared interfaces
+* Score calculations
 
 ---
 
-## 6. Storage Layer
+# Storage Strategy
 
-Browser only.
+Browser localStorage is the only persistence mechanism.
 
-Uses
+Purpose
 
-```
-localStorage
-```
+* Save previous analyses.
+* Restore previous reports.
+* Improve user experience.
 
-Stores
+Rules
 
-Recent analyses.
-
-No database.
+* Maximum 20 reports.
+* Newest report appears first.
+* Remove the oldest report when the limit is exceeded.
+* Never store API keys or sensitive data.
 
 ---
 
@@ -200,11 +208,12 @@ No database.
 
 ## app/
 
-Pages.
+Contains
 
-Routing.
-
-API routes.
+* Routes
+* Layout
+* Metadata
+* API routes
 
 No reusable business logic.
 
@@ -212,99 +221,125 @@ No reusable business logic.
 
 ## components/
 
-Reusable UI only.
+Contains reusable UI components.
 
-Every component should have one responsibility.
+Organized by feature.
 
----
-
-## langgraph/
-
-Creates graph.
-
-Defines graph state.
-
-Connects nodes.
-
----
-
-## nodes/
-
-Each file represents one AI capability.
-
-Example
-
-```
-companyResearch.ts
-
-financialAnalysis.ts
-
-newsAnalysis.ts
-
-riskAnalysis.ts
-
-growthAnalysis.ts
-
-decision.ts
-
-formatter.ts
-```
-
----
-
-## prompts/
-
-Prompt templates only.
-
-No API calls.
-
-No business logic.
-
----
-
-## services/
-
-Every API wrapper.
-
-Example
-
-```
-financial.service.ts
-
-company.service.ts
-
-news.service.ts
+```text
+components/
+├── layout/
+├── report/
+├── search/
+├── progress/
+├── history/
+├── shared/
+└── ui/
 ```
 
 ---
 
 ## hooks/
 
-Reusable React hooks.
+Contains reusable React hooks.
 
-Example
+Examples
 
+* useAnalysis
+* useHistory
+
+Hooks coordinate UI behavior.
+
+They do not implement AI logic.
+
+---
+
+## langgraph/
+
+Responsible for graph construction.
+
+Contains
+
+* Graph definition
+* Graph state
+* Node connections
+
+---
+
+## nodes/
+
+Each file implements one AI capability.
+
+Examples
+
+```text
+companyResearch.ts
+financialAnalysis.ts
+newsAnalysis.ts
+marketAnalysis.ts
+evidenceAggregation.ts
+investmentReasoning.ts
+recommendation.ts
+reportFormatter.ts
 ```
-useAnalysis.ts
 
-useLocalHistory.ts
+One responsibility per node.
 
-useTheme.ts
+---
+
+## prompts/
+
+Contains only prompt templates.
+
+No API calls.
+
+No business logic.
+
+Each prompt supports exactly one node.
+
+---
+
+## services/
+
+Wraps all external APIs.
+
+Examples
+
+```text
+gemini.service.ts
+financial.service.ts
+company.service.ts
 ```
 
 ---
 
-## types/
+## lib/
 
-Shared interfaces.
+Contains
 
-Used across frontend and backend.
+* Constants
+* Configuration
+* Shared helpers
 
 ---
 
 ## utils/
 
-Pure utility functions.
+Contains pure utility functions.
+
+Examples
+
+* formatCurrency()
+* formatDate()
+* calculateScore()
+* validateCompanyName()
+
+---
+
+## types/
+
+Contains all shared TypeScript interfaces.
+
+Used by both frontend and backend.
 
 ---
 
@@ -312,286 +347,176 @@ Pure utility functions.
 
 Use Server Components by default.
 
-Use Client Components only when:
+Use Client Components only when required.
 
-* user interaction
+Examples
 
-* animations
+Client Components
 
-* localStorage
+* Search input
+* Progress animation
+* Sidebar interactions
+* localStorage access
 
-* hooks
+Server Components
 
-Everything else remains Server Components.
+* Static layout
+* Report rendering
+* Shared layout elements (where possible)
+
+---
+
+# Request Lifecycle
+
+```text
+User enters company
+        │
+        ▼
+Search submitted
+        │
+        ▼
+POST /api/analyze
+        │
+        ▼
+Validate request
+        │
+        ▼
+Execute LangGraph
+        │
+        ▼
+Collect evidence
+        │
+        ▼
+Generate recommendation
+        │
+        ▼
+Return structured report
+        │
+        ▼
+Render report
+        │
+        ▼
+Save to localStorage
+```
 
 ---
 
 # Data Flow
 
-```
-User
+Data always flows downward.
 
-↓
-
-Search Company
-
-↓
-
-POST /api/analyze
-
-↓
-
-Validate Input
-
-↓
-
-Run LangGraph
-
-↓
-
-Research Company
-
-↓
-
-Collect Financial Data
-
-↓
-
-Collect News
-
-↓
-
-Risk Analysis
-
-↓
-
-Growth Analysis
-
-↓
-
-Gemini Decision
-
-↓
-
-Structured Report
-
-↓
-
-Return JSON
-
-↓
-
-Dashboard renders report
-
-↓
-
-Save report locally
+```text
+Workspace
+    │
+    ├── SearchSection
+    │
+    ├── ProgressTimeline
+    │
+    ├── ReportSection
+    │
+    └── HistorySidebar
 ```
 
----
+Child components never modify parent state directly.
 
-# Component Communication
-
-```
-Dashboard
-
-│
-
-├── SearchBar
-
-├── ProgressTimeline
-
-├── Report
-
-│      ├── Summary
-
-│      ├── Financials
-
-│      ├── Risks
-
-│      ├── Opportunities
-
-│      ├── News
-
-│      └── Recommendation
-
-└── HistorySidebar
-```
-
-Communication always flows downward.
-
-No sibling communication.
-
----
-
-# State Management
-
-React state.
-
-Custom hooks.
-
-No Redux.
-
-No Zustand.
-
-No unnecessary Context Providers.
-
----
-
-# History Strategy
-
-Every completed report is stored locally.
-
-Fields
-
-Company
-
-Timestamp
-
-Recommendation
-
-Score
-
-Complete JSON report
-
-Maximum
-
-20 reports.
-
-Oldest reports automatically removed.
+Shared state is managed through custom hooks.
 
 ---
 
 # Error Flow
 
-API Error
-
-↓
-
-Catch
-
-↓
-
-Return structured error
-
-↓
-
-UI renders friendly message
+```text
+Validation Error
+        │
+        ▼
+Structured API Error
+        │
+        ▼
+ErrorState Component
+```
 
 Never expose stack traces.
 
----
-
-# Prompt Flow
-
-Prompt files are independent.
-
-Each prompt has one responsibility.
-
-Nodes load prompt.
-
-Prompt receives structured input.
-
-Prompt returns structured JSON.
+Display friendly messages.
 
 ---
 
-# Report Format
+# Module Dependencies
 
-Every report must contain
+Allowed dependency direction
 
-Company
+```text
+UI
+    ↓
+Hooks
+    ↓
+API
+    ↓
+LangGraph
+    ↓
+Services
+```
 
-Overview
+Forbidden
 
-Financial Health
-
-News
-
-Risks
-
-Growth
-
-Recommendation
-
-Investment Score
-
-Confidence
-
-Investment Thesis
-
-Sources
+* UI → Services
+* UI → LangGraph
+* Components → Prompts
+* Components → External APIs
 
 ---
 
-# Performance
+# Non-Functional Requirements
 
-Lazy load heavy sections.
+The architecture must support
 
-Memoize expensive components.
-
-Avoid unnecessary renders.
-
-Minimize API calls.
-
----
-
-# Security
-
-Never expose API keys.
-
-Validate all inputs.
-
-Sanitize company names.
-
-Limit request size.
+* Responsiveness
+* Accessibility
+* Maintainability
+* Testability
+* Scalability
+* Explainability
 
 ---
 
-# Logging
+# Known Constraints
 
-Development
+* Free APIs only.
+* No authentication.
+* No database.
+* Browser-based persistence.
+* Single backend endpoint for MVP.
 
-Console logging.
-
-Production
-
-Minimal logging.
-
-No sensitive information.
+These constraints are intentional and align with the project scope.
 
 ---
 
-# Deployment
+# Future Expansion
 
-Platform
+The architecture should allow future additions without major refactoring.
 
-Vercel
+Examples
 
-Environment Variables
-
-Gemini API Key
-
-Financial API Key
-
-Search API Key (if required)
+* User accounts
+* Cloud persistence
+* Portfolio management
+* Watchlists
+* Scheduled analysis
+* Company comparison
+* Team collaboration
 
 ---
 
 # Engineering Principles
 
-Every module should have a single responsibility.
+Every module has a single responsibility.
 
-Dependencies should always point downward.
+Every layer remains independent.
 
-UI should never know how AI works.
+The frontend should never understand AI implementation details.
 
-AI should never know how UI works.
+The AI layer should never contain UI logic.
 
-Services should never know about React.
+Services should remain replaceable.
 
-Prompt files should contain only prompts.
-
-Every layer should be independently replaceable.
-
-The architecture should remain modular, scalable, and easy to explain during technical interviews.
+The architecture should remain modular, predictable, and easy to explain during technical interviews.

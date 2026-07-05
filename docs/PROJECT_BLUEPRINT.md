@@ -2,17 +2,19 @@
 
 ### AI-Powered Investment Research Workspace
 
-Version: 1.0
+Version: 2.0 (Frozen Architecture)
 
 ---
 
-# 1. Product Vision
+# 1. Overview
 
-AlphaLens AI is an AI-powered investment research workspace that helps users analyze publicly listed companies and generates a structured investment recommendation.
+AlphaLens AI is an AI-powered investment research workspace that helps users analyze publicly listed companies and generates an explainable investment recommendation.
 
-Instead of acting like a chatbot, AlphaLens behaves like a junior equity research analyst. It gathers information, analyzes multiple aspects of the business, evaluates risks and opportunities, and produces a professional investment report.
+The application is designed to demonstrate modern AI engineering using LangChain.js and LangGraph.js while maintaining a clean, production-ready software architecture.
 
-The objective is not to predict stock prices but to demonstrate transparent, explainable AI reasoning.
+The primary goal is **not** to predict stock prices.
+
+The primary goal is to research a company, synthesize reliable evidence, evaluate investment factors, and produce a transparent recommendation.
 
 ---
 
@@ -21,680 +23,498 @@ The objective is not to predict stock prices but to demonstrate transparent, exp
 Build an AI Investment Research Agent using:
 
 * Next.js
+* TypeScript
 * LangChain.js
 * LangGraph.js
 * Gemini
 * Modern React UI
 
-The application should:
+The application accepts a company name and returns:
 
-* Accept a company name.
-* Research the company.
-* Analyze multiple investment factors.
-* Decide:
-
-  * Invest
-  * Watch
-  * Pass
-* Explain the reasoning behind the decision.
-* Present the result in a professional dashboard.
-
----
-
-# 3. Product Principles
-
-The application should feel like a SaaS product, not an AI demo.
-
-Priorities:
-
-1. Excellent AI workflow
-2. Clean architecture
-3. Beautiful UI
-4. Explainable outputs
-5. Maintainable code
+* Company Overview
+* Financial Analysis
+* Market Position
+* Recent News
+* Risks
+* Opportunities
+* Investment Score
+* Confidence Score
+* Investment Recommendation
+* Investment Thesis
+* Sources
 
 ---
 
-# 4. Target Users
+# 3. Product Vision
 
-Primary:
+AlphaLens AI should feel like a professional AI workspace rather than an AI chatbot.
 
-* Students
-* Beginner Investors
-* Recruiters evaluating AI products
+The interface should communicate:
 
-Secondary:
+* Trust
+* Clarity
+* Speed
+* Professionalism
+* Explainability
 
-* Analysts
-* Startup founders
+The AI should behave like a junior equity research analyst instead of simply answering prompts.
 
 ---
 
-# 5. Core Features
+# 4. Core Principles
+
+The project prioritizes:
+
+1. AI Engineering
+2. Explainability
+3. Product Design
+4. Clean Architecture
+5. Maintainability
+
+The project intentionally avoids unnecessary complexity that does not improve the AI workflow.
+
+---
+
+# 5. Architecture Decisions
 
 ## Authentication
 
-Google Sign-In.
+No authentication.
 
-Simple.
+Reason:
 
-No roles.
+Authentication is outside the scope of the assignment and does not improve the investment research workflow.
 
 ---
 
-## Dashboard
+## Database
 
-Professional dashboard.
+No database.
+
+Reason:
+
+Every company analysis is independent.
+
+Persistent backend storage is unnecessary for the MVP.
+
+---
+
+## History
+
+History is stored using browser localStorage.
+
+Reason:
+
+Users can reopen previous analyses without introducing unnecessary backend complexity.
+
+Maximum stored reports:
+
+20
+
+Old reports are automatically removed.
+
+---
+
+## Theme
+
+Dark-first only.
+
+No light mode.
+
+No theme toggle.
+
+Reason:
+
+Maintains a consistent premium experience while reducing unnecessary UI complexity.
+
+---
+
+# 6. User Journey
+
+User opens AlphaLens AI.
+
+↓
+
+Investment Workspace opens immediately.
+
+↓
+
+User enters company name.
+
+↓
+
+User clicks Analyze.
+
+↓
+
+Investment Agent researches the company.
+
+↓
+
+AI generates report.
+
+↓
+
+Report appears inside workspace.
+
+↓
+
+Report is automatically stored in local history.
+
+↓
+
+User may reopen previous reports from the sidebar.
+
+---
+
+# 7. Application Pages
+
+Only the following routes exist.
+
+## /
+
+Investment Workspace
+
+Primary application interface.
+
+Contains:
+
+* Search
+* Progress
+* Report
+* History Sidebar
+
+---
+
+## 404
+
+Custom Not Found page.
+
+---
+
+No additional pages exist in Version 1.
+
+---
+
+# 8. Main Workspace Layout
+
+The workspace contains four major areas.
+
+1. Navbar
+
+2. Sidebar
+
+3. Search Workspace
+
+4. Investment Report
+
+---
+
+# 9. Navbar
+
+Displays:
+
+* AlphaLens AI Logo
+* GitHub Link
+
+No profile.
+
+No authentication controls.
+
+No theme switch.
+
+---
+
+# 10. Sidebar
 
 Displays:
 
 * New Analysis
-* Previous Analyses
-* User Profile
+* Recent Analyses
+
+The sidebar is collapsible on desktop.
+
+On mobile it becomes a slide-out drawer.
+
+Selecting a previous analysis immediately loads that report.
 
 ---
 
-## Company Search
+# 11. Search Workspace
 
-Single search box.
+Contains:
+
+Large search input.
+
+Analyze button.
+
+Suggested companies.
+
+Examples:
+
+* Apple
+* Microsoft
+* NVIDIA
+* Amazon
+* Reliance Industries
+* Tata Consultancy Services
+
+---
+
+# 12. Analysis Progress
+
+Instead of a spinner, AlphaLens displays meaningful progress.
 
 Example:
 
-Analyze Apple
+✓ Understanding company
 
-Analyze NVIDIA
+✓ Collecting financial information
 
-Analyze Reliance Industries
+✓ Reading recent news
 
----
+✓ Evaluating market position
 
-## AI Research
+✓ Assessing investment risks
 
-Research:
+✓ Building investment thesis
 
-* Company overview
-* Business model
-* Industry
-* Competitors
-* Financial health
-* Recent news
-* Risks
-* Growth opportunities
+✓ Preparing final report
+
+These steps will later map directly to LangGraph node execution.
 
 ---
 
-## Recommendation Engine
+# 13. Investment Report
 
-Possible outputs:
+The report contains the following sections.
 
-* Invest
-* Watch
-* Pass
+## Company Overview
 
-Each recommendation includes reasoning.
-
----
-
-## Report History
-
-Every completed report is stored.
-
-User can reopen old analyses.
-
----
-
-## Export
-
-Export report as PDF.
-
----
-
-# 6. Investment Intelligence Pipeline
-
-The application internally uses LangGraph.
-
-Pipeline:
-
-START
-
-↓
-
-Company Research
-
-↓
-
-Financial Analysis
-
-↓
-
-News Analysis
-
-↓
-
-Risk Analysis
-
-↓
-
-Growth Opportunity Analysis
-
-↓
-
-Decision Engine
-
-↓
-
-Report Formatter
-
-↓
-
-END
-
-Each node has one responsibility.
-
----
-
-# 7. LangGraph Node Responsibilities
-
-## Company Research
-
-Collect:
-
-* Company description
+* Name
 * Industry
 * Headquarters
-* Products
-* Market position
-
-Output:
-
-Structured JSON.
-
----
-
-## Financial Analysis
-
-Analyze:
-
-* Revenue trend
-* Profitability
-* Debt
-* Cash position
+* Description
 * Market Cap
-* P/E
+
+---
+
+## Financial Health
+
+* Revenue
+* Net Income
 * EPS
-
-Output:
-
-Financial summary.
-
----
-
-## News Analysis
-
-Research:
-
-* Recent news
-* Product launches
-* Acquisitions
-* Partnerships
-* Legal issues
-
-Summarize impact.
-
----
-
-## Risk Analysis
-
-Evaluate:
-
-* Competition
-* Regulation
-* Market risks
-* Valuation concerns
+* PE Ratio
 * Debt
-
-Return:
-
-Risk level
-
-High
-
-Medium
-
-Low
+* Cash Flow
 
 ---
 
-## Growth Analysis
+## Market Position
 
-Analyze:
-
-* Expansion
-* AI adoption
-* Market demand
-* Innovation
-* Future opportunities
+* Competitors
+* Strengths
+* Weaknesses
 
 ---
 
-## Decision Engine
+## Recent News
 
-Input:
+Recent developments with impact labels.
 
-All previous node outputs.
+Positive
 
-Output:
+Neutral
 
-Recommendation
+Negative
+
+---
+
+## Risks
+
+Business risks.
+
+Regulatory risks.
+
+Competitive risks.
+
+Financial risks.
+
+---
+
+## Growth Opportunities
+
+Expansion
+
+Innovation
+
+Industry Trends
+
+Emerging Opportunities
+
+---
+
+## Recommendation
+
+Displays:
 
 Investment Score
+
+Recommendation
 
 Confidence
 
 Investment Thesis
 
----
+Key Positives
 
-## Report Formatter
-
-Creates structured JSON consumed by the frontend.
-
-No markdown.
-
-No HTML.
-
-Only structured objects.
+Key Risks
 
 ---
 
-# 8. AI Workflow
+## Sources
 
-User enters company.
-
-↓
-
-Backend receives request.
-
-↓
-
-LangGraph executes nodes.
-
-↓
-
-Gemini reasons over collected information.
-
-↓
-
-Structured report generated.
-
-↓
-
-Frontend renders dashboard.
+Every report displays the sources used for analysis.
 
 ---
 
-# 9. Frontend Pages
+# 14. Recommendation Categories
 
-Landing
-
-Dashboard
-
-Analysis
-
-History
-
-Profile
-
-404
-
----
-
-# 10. Dashboard Layout
-
-Header
-
-Search Bar
-
-Quick Stats
-
-Recent Analyses
-
-Investment Report
-
-Footer
-
----
-
-# 11. Investment Report Sections
-
-Company Overview
-
-Financial Health
-
-Business Strengths
-
-Risks
-
-Growth Opportunities
-
-Recent News
-
-Investment Score
-
-Recommendation
-
-Confidence
-
-Sources
-
----
-
-# 12. Recommendation System
-
-Investment Score:
-
-0–100
-
-Recommendation Rules:
-
-80–100
+Three possible recommendations exist.
 
 Invest
 
-60–79
-
 Watch
-
-Below 60
 
 Pass
 
-Confidence:
+Investment Score
+
+0–100
+
+Confidence
 
 0–100%
 
 ---
 
-# 13. Folder Structure
+# 15. Technology Stack
 
-src/
+Frontend
 
-app/
+* Next.js 16
+* React
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* Framer Motion
 
-components/
+Backend
 
-hooks/
+* Next.js Route Handlers
 
-lib/
+AI
 
-langgraph/
+* LangChain.js
+* LangGraph.js
+* Gemini
 
-nodes/
+Storage
 
-prompts/
+* Browser localStorage
 
-services/
+Deployment
 
-types/
-
-utils/
-
-styles/
-
-docs/
-
----
-
-# 14. Component Tree
-
-Navbar
-
-Sidebar
-
-SearchBar
-
-LoadingPipeline
-
-ReportCard
-
-MetricCard
-
-RiskCard
-
-OpportunityCard
-
-RecommendationCard
-
-HistoryCard
-
-Footer
+* Vercel
 
 ---
 
-# 15. API Routes
+# 16. AI Workflow
 
-POST /api/analyze
+The LangGraph agent performs:
 
-Runs LangGraph.
+1. Company Research
 
-Returns report.
+2. Financial Analysis
 
-GET /api/history
+3. News Analysis
 
-Returns user history.
+4. Market Analysis
 
-GET /api/report/:id
+5. Evidence Aggregation
 
-Returns previous report.
+6. Investment Reasoning
 
----
+7. Recommendation Generation
 
-# 16. Database
+8. Report Formatting
 
-Tables
+The frontend never interacts directly with the AI workflow.
 
-User
-
-Analysis
-
-Analysis stores:
-
-Company Name
-
-Report JSON
-
-Recommendation
-
-Score
-
-Confidence
-
-Created At
-
-No additional tables.
+It only consumes the structured report returned by the backend.
 
 ---
 
-# 17. UI Theme
+# 17. Non-Functional Requirements
 
-Premium SaaS.
+The application must be:
 
-Minimal.
+* Responsive
+* Accessible
+* Modular
+* Maintainable
+* Explainable
+* Production-ready
 
-Dark-first.
+Every component should have a single responsibility.
 
-Accent:
-
-Emerald
-
-White
-
-Slate
-
-Rounded cards.
-
-Soft shadows.
-
-Large spacing.
-
-No clutter.
+Business logic must remain separate from presentation.
 
 ---
 
-# 18. Loading Experience
+# 18. Constraints
 
-Instead of spinner:
+The project intentionally uses:
 
-✓ Researching company
+* Free APIs
+* No paid services
+* No authentication
+* No database
 
-✓ Reading financial data
-
-✓ Analyzing recent news
-
-✓ Evaluating risks
-
-✓ Identifying opportunities
-
-✓ Generating investment thesis
-
-✓ Preparing report
+These decisions keep the implementation focused on AI engineering and ensure the project is easy to run, deploy, and explain during technical interviews.
 
 ---
 
-# 19. Error Handling
+# 19. Future Improvements
 
-Company not found
+Potential future features include:
 
-API unavailable
+* User accounts
+* Cloud synchronization
+* Portfolio tracking
+* Company comparison
+* Watchlists
+* Scheduled re-analysis
+* Email reports
+* Analyst consensus
+* SEC filing analysis
+* Earnings call analysis
 
-Rate limit exceeded
-
-Network error
-
-Invalid company
-
-Each has friendly UI.
-
----
-
-# 20. Prompt Strategy
-
-Every prompt lives inside:
-
-src/prompts
-
-No inline prompts.
-
-Each prompt has one responsibility.
-
-Examples:
-
-companyResearch.ts
-
-financialAnalysis.ts
-
-riskAnalysis.ts
-
-decision.ts
-
-reportFormatter.ts
+These features are intentionally excluded from Version 1.
 
 ---
 
-# 21. Coding Standards
+# 20. Definition of Done
 
-TypeScript only.
+AlphaLens AI is complete when:
 
-No "any".
-
-Reusable components.
-
-No duplicated logic.
-
-Business logic never inside UI components.
-
-Environment variables only.
-
-Meaningful naming.
-
-Small functions.
-
----
-
-# 22. State Management
-
-React state.
-
-Server Components where appropriate.
-
-No Redux.
-
-Avoid unnecessary Context providers.
-
----
-
-# 23. Future Improvements
-
-Portfolio Tracking
-
-Watchlists
-
-Company Comparison
-
-Email Reports
-
-Scheduled Reanalysis
-
-Investment Alerts
-
-Analyst Consensus
-
-SEC Filing Analysis
-
-Earnings Call Analysis
-
----
-
-# 24. Definition of Done
-
-Project is complete when:
-
-✓ User logs in
-
-✓ Searches company
-
-✓ LangGraph executes
-
-✓ AI generates recommendation
-
-✓ Dashboard renders report
-
-✓ Report is saved
-
-✓ User can reopen history
-
-✓ Export works
-
-✓ Responsive UI
-
-✓ Deployed on Vercel
-
-✓ README completed
-
-✓ AI prompt log included
-
----
-
-# 25. Engineering Philosophy
-
-The application should prioritize:
-
-Correctness over complexity.
-
-Explainability over magic.
-
-Maintainability over shortcuts.
-
-Product quality over feature quantity.
-
-Every engineering decision should make the product easier to understand, easier to extend, and easier to explain during technical interviews.
+* Users can analyze a public company.
+* The AI agent researches the company using external information.
+* A structured investment report is generated.
+* Reports include recommendation, confidence, risks, opportunities, and sources.
+* Previous analyses are available through local history.
+* Reports can be exported.
+* The application is responsive.
+* The application is deployed successfully.
+* Documentation is complete.
+* Every architectural decision can be explained confidently during a technical interview.

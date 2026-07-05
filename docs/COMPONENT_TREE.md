@@ -2,66 +2,80 @@
 
 ## Component Architecture
 
-Version: 1.0
+Version: 2.0 (Frozen)
 
 ---
 
 # Purpose
 
-This document defines the complete React component hierarchy for AlphaLens AI.
+This document defines the React component hierarchy for AlphaLens AI.
+
+The objective is to build a modular, maintainable, and reusable interface.
 
 Every component should have a single responsibility.
 
-Components should be reusable, modular, and easy to test.
+Pages compose components.
 
-Business logic should never live inside UI components.
+Components compose smaller components.
 
----
-
-# Component Philosophy
-
-The UI should be built from small reusable components.
-
-Pages should compose components.
-
-Components should never directly call external APIs.
-
-They receive data through props or hooks.
+Business logic remains outside presentation components.
 
 ---
 
-# High-Level Tree
+# Design Principles
+
+The component architecture follows these principles:
+
+* Composition over inheritance
+* Reusable UI
+* Feature-based organization
+* Single Responsibility Principle
+* Minimal prop drilling
+* Clear ownership of state
+
+---
+
+# High-Level Component Tree
 
 ```text
-App
-│
-├── RootLayout
+RootLayout
 │
 ├── Navbar
 │
-├── Sidebar
+├── Workspace
+│   │
+│   ├── Sidebar
+│   │     ├── NewAnalysisButton
+│   │     ├── HistoryList
+│   │     │      └── HistoryItem
+│   │     └── SidebarToggle
+│   │
+│   ├── SearchSection
+│   │      ├── SearchInput
+│   │      ├── AnalyzeButton
+│   │      └── SuggestedCompanies
+│   │
+│   ├── ProgressTimeline
+│   │
+│   ├── ReportSection
+│   │      ├── ExecutiveSummaryCard
+│   │      ├── CompanyOverviewCard
+│   │      ├── FinancialHealthCard
+│   │      ├── MarketPositionCard
+│   │      ├── NewsCard
+│   │      ├── RisksCard
+│   │      ├── OpportunitiesCard
+│   │      ├── RecommendationCard
+│   │      └── SourcesCard
+│   │
+│   ├── EmptyState
+│   │
+│   ├── ErrorState
+│   │
+│   └── LoadingOverlay
+│          └── ProgressTimeline
 │
-└── DashboardPage
-      │
-      ├── SearchSection
-      │      ├── SearchInput
-      │      ├── ExampleCompanies
-      │      └── AnalyzeButton
-      │
-      ├── ProgressTimeline
-      │
-      ├── ReportSection
-      │      ├── CompanyOverviewCard
-      │      ├── FinancialCard
-      │      ├── MarketPositionCard
-      │      ├── NewsCard
-      │      ├── RiskCard
-      │      ├── OpportunityCard
-      │      ├── RecommendationCard
-      │      └── SourcesCard
-      │
-      └── HistorySidebar
-             └── HistoryItem
+└── NotFoundPage
 ```
 
 ---
@@ -73,14 +87,11 @@ App
 Responsibilities
 
 * Global layout
-* Theme
 * Fonts
 * Metadata
-* Providers
+* Global styles
 
-Owns
-
-Nothing.
+Owns no application state.
 
 ---
 
@@ -88,25 +99,86 @@ Nothing.
 
 Responsibilities
 
-* Branding
-* Theme Toggle
-* GitHub Button
+* Display application logo
+* Display GitHub link
 
-Future
+No navigation logic.
 
-Profile Menu
+No user state.
 
 ---
 
-## Sidebar
+## Workspace
+
+The primary application container.
+
+Responsible for:
+
+* Composing the interface
+* Coordinating page-level state
+* Rendering report or empty state
+
+Owns
+
+* Current report
+* Loading state
+* Error state
+
+---
+
+# Sidebar
 
 Responsibilities
 
-* Navigation
-* Recent Analyses
-* Future navigation links
+* New Analysis button
+* Recent analyses
+* Collapse / expand behavior
 
-Should not perform data fetching.
+History data comes from
+
+```text
+useHistory()
+```
+
+No direct localStorage access.
+
+---
+
+## SidebarToggle
+
+Controls sidebar visibility.
+
+Desktop
+
+Collapse / Expand.
+
+Mobile
+
+Open / Close drawer.
+
+---
+
+## HistoryList
+
+Displays all saved analyses.
+
+Maximum
+
+20 items.
+
+Sorted newest first.
+
+---
+
+## HistoryItem
+
+Displays
+
+* Company name
+* Recommendation badge
+* Timestamp
+
+Selecting an item loads the saved report.
 
 ---
 
@@ -114,13 +186,17 @@ Should not perform data fetching.
 
 ## SearchSection
 
-Acts as the container.
+Coordinates search interactions.
 
 Contains
 
 * SearchInput
 * AnalyzeButton
-* ExampleCompanies
+* SuggestedCompanies
+
+Owns
+
+Current company name.
 
 ---
 
@@ -129,10 +205,10 @@ Contains
 Responsibilities
 
 * Company input
-* Validation
+* Validation feedback
 * Keyboard support
 
-No API calls.
+No API requests.
 
 ---
 
@@ -142,23 +218,24 @@ Responsibilities
 
 * Trigger analysis
 
-Displays loading state.
+Displays loading state while analysis is running.
 
 ---
 
-## ExampleCompanies
+## SuggestedCompanies
 
-Displays quick suggestions.
+Displays quick examples.
 
 Examples
 
 * Apple
-* NVIDIA
 * Microsoft
-* Reliance
+* NVIDIA
+* Amazon
+* Reliance Industries
 * Tata Consultancy Services
 
-Future additions should be configurable.
+Selecting an example fills the search field.
 
 ---
 
@@ -166,19 +243,25 @@ Future additions should be configurable.
 
 ## ProgressTimeline
 
-Displays current pipeline progress.
+Displays AI execution progress.
 
-Examples
+Milestone 1
 
-✓ Researching company
+Placeholder progress.
+
+Milestone 2
+
+Connected to LangGraph execution.
+
+Example
+
+✓ Understanding company
 
 ✓ Reading financial data
 
 ✓ Evaluating risks
 
-✓ Generating investment thesis
-
-Should support animated transitions.
+✓ Building investment thesis
 
 ---
 
@@ -186,13 +269,29 @@ Should support animated transitions.
 
 ## ReportSection
 
-Container.
+Container for all report cards.
 
 Receives
 
+```ts
 InvestmentReport
+```
 
-Delegates rendering.
+Delegates rendering to child components.
+
+---
+
+## ExecutiveSummaryCard
+
+Displays
+
+* Company
+* Industry
+* Recommendation
+* Investment Score
+* Confidence
+
+Highest visual priority.
 
 ---
 
@@ -200,15 +299,14 @@ Delegates rendering.
 
 Displays
 
-* Company
-* Industry
-* Headquarters
 * Description
+* Headquarters
 * Market Cap
+* Core business
 
 ---
 
-## FinancialCard
+## FinancialHealthCard
 
 Displays
 
@@ -219,7 +317,7 @@ Displays
 * Debt
 * Cash Flow
 
-Should support unavailable values gracefully.
+Gracefully handles unavailable values.
 
 ---
 
@@ -235,43 +333,33 @@ Displays
 
 ## NewsCard
 
-Displays
+Displays recent news.
 
-Recent news.
+Each item includes
 
-Each item
-
-Headline
-
-Summary
-
-Impact Badge
+* Title
+* Summary
+* Impact badge
 
 ---
 
-## RiskCard
+## RisksCard
 
 Displays
 
-Risk level.
-
-Risk bullets.
-
-Use warning styling.
+* Risk level
+* Risk bullets
 
 ---
 
-## OpportunityCard
+## OpportunitiesCard
 
 Displays
 
-Growth opportunities.
-
-Expansion.
-
-Innovation.
-
-Industry trends.
+* Growth opportunities
+* Expansion
+* Innovation
+* Industry trends
 
 ---
 
@@ -281,142 +369,53 @@ Hero component.
 
 Displays
 
-Investment Score
+* Investment Score
+* Recommendation
+* Confidence
+* Investment Thesis
+* Key Positives
+* Key Risks
 
-Recommendation
-
-Confidence
-
-Investment Thesis
-
-Positive Factors
-
-Negative Factors
-
-This should receive the highest visual emphasis.
+Receives the greatest visual emphasis.
 
 ---
 
 ## SourcesCard
 
-Displays
+Displays references used by the AI.
 
-List of references.
-
-Every source should include
+Each source contains
 
 * Title
 * URL
 
-Links should open in a new tab.
-
----
-
-# History Components
-
-## HistorySidebar
-
-Displays previous analyses.
-
-Reads from local storage through a hook.
-
-No storage logic inside the component.
-
----
-
-## HistoryItem
-
-Displays
-
-Company
-
-Recommendation
-
-Score
-
-Timestamp
-
-Selecting an item reloads the saved report.
+Links open in a new tab.
 
 ---
 
 # Shared Components
 
-## MetricCard
-
-Reusable metric display.
+Reusable UI building blocks.
 
 Examples
 
-Revenue
+```text
+MetricCard
 
-EPS
+SectionHeader
 
-Market Cap
+StatusBadge
 
-Confidence
+EmptyState
 
-Score
+ErrorState
 
----
+SkeletonLoader
 
-## SectionHeader
+LoadingOverlay
+```
 
-Reusable section title.
-
-Supports
-
-Title
-
-Subtitle
-
-Icon
-
----
-
-## Badge
-
-Reusable badge.
-
-Examples
-
-Invest
-
-Watch
-
-Pass
-
-Positive
-
-Negative
-
-Neutral
-
----
-
-## EmptyState
-
-Used when
-
-No analyses exist.
-
-No report loaded.
-
----
-
-## ErrorState
-
-Displays friendly error messages.
-
-Supports retry action.
-
----
-
-## SkeletonLoader
-
-Displayed during loading.
-
-No layout shift.
+These components should contain presentation logic only.
 
 ---
 
@@ -426,9 +425,10 @@ No layout shift.
 
 Responsibilities
 
-* Execute analysis
+* Submit analysis requests
 * Track loading
-* Handle API errors
+* Track errors
+* Store current report
 
 ---
 
@@ -441,131 +441,92 @@ Responsibilities
 * Delete report
 * Return sorted history
 
----
-
-## useTheme
-
-Theme switching.
-
----
-
-# Utility Components
-
-## LoadingOverlay
-
-Displayed during AI execution.
-
-Contains
-
-ProgressTimeline
-
----
-
-## PageContainer
-
-Provides consistent spacing.
-
----
-
-## CardGrid
-
-Responsive card layout.
-
----
-
-# Props Guidelines
-
-Every component should receive only the data it needs.
-
-Avoid passing the entire report object when a component only requires one section.
-
-Prefer explicit props over deeply nested objects.
+Owns all browser persistence.
 
 ---
 
 # State Ownership
 
-Search state
+| State            | Owner         |
+| ---------------- | ------------- |
+| Search Query     | SearchSection |
+| Current Report   | Workspace     |
+| Loading          | useAnalysis   |
+| Error            | useAnalysis   |
+| History          | useHistory    |
+| Sidebar Expanded | Sidebar       |
 
-Owned by SearchSection.
+State should be owned by the highest component that requires it.
 
-Analysis state
-
-Owned by Dashboard page through useAnalysis.
-
-History
-
-Owned by useHistory.
-
-Theme
-
-Owned by Theme Provider.
-
-Components should remain stateless whenever possible.
+Avoid unnecessary lifting of state.
 
 ---
 
 # Data Flow
 
 ```text
-Dashboard
-    │
-    ├── SearchSection
-    │       │
-    │       ▼
-    │   useAnalysis
-    │       │
-    │       ▼
-    │   API
-    │       │
-    │       ▼
-    │ InvestmentReport
-    │
-    ├── ReportSection
-    │
-    └── HistorySidebar
+Workspace
+     │
+     ├── SearchSection
+     │         │
+     │         ▼
+     │   useAnalysis
+     │         │
+     │         ▼
+     │     /api/analyze
+     │         │
+     │         ▼
+     │  InvestmentReport
+     │
+     ├── ReportSection
+     │
+     └── Sidebar
+               │
+               ▼
+         useHistory
+               │
+               ▼
+         localStorage
 ```
 
 Data always flows downward.
 
-Never mutate parent state inside child components.
+Child components never modify parent state directly.
 
 ---
 
 # Naming Conventions
 
-Use PascalCase for components.
+Use PascalCase.
 
 Examples
 
-CompanyOverviewCard
-
+```text
 RecommendationCard
 
-HistorySidebar
+FinancialHealthCard
 
 ProgressTimeline
 
-File names should match component names.
+HistoryList
+```
 
 One component per file.
+
+File name matches component name.
 
 ---
 
 # Engineering Principles
 
-Components should be composable.
+Components should remain small and focused.
 
-Components should remain presentation-focused.
+Presentation logic belongs inside components.
 
-Hooks contain UI behavior.
+Business logic belongs inside hooks and services.
 
-Services contain API communication.
+AI logic belongs inside the LangGraph layer.
 
-LangGraph contains AI orchestration.
+Components should be reusable, testable, and easy to understand.
 
-Pages compose the application.
-
-The UI should remain independent from the AI implementation.
-
-Every component should be easy to explain during a technical interview.
+The component architecture should scale naturally as future features are added.

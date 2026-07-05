@@ -1,65 +1,70 @@
 # AlphaLens AI
 
-## LangGraph & Agent Design
+## LangGraph Agent Design
 
-Version: 1.0
+Version: 2.0 (Frozen)
 
 ---
 
 # Purpose
 
-This document defines the AI architecture for AlphaLens AI.
+This document defines the architecture of the AI Investment Research Agent.
 
-The goal is to build a real AI Investment Research Agent using LangGraph rather than a single LLM prompt.
+The agent is responsible for transforming a company name into a structured, explainable investment report.
 
-The AI should gather evidence, reason over it, and produce an explainable investment recommendation.
-
----
-
-# Design Philosophy
-
-The AI should behave like a junior investment analyst.
-
-It should not invent facts.
-
-It should collect evidence using tools, synthesize findings, evaluate risks, and generate a structured investment thesis.
-
-The reasoning process should be modular and extensible.
+The implementation uses LangGraph to orchestrate multiple reasoning steps while maintaining a shared graph state.
 
 ---
 
-# High-Level Flow
+# Design Goals
+
+The agent should:
+
+* Gather reliable evidence.
+* Analyze multiple investment dimensions.
+* Produce explainable recommendations.
+* Return structured JSON.
+* Remain modular and extensible.
+
+The agent should behave like a junior investment analyst rather than a chatbot.
+
+---
+
+# High-Level Workflow
 
 ```text
-User
-    │
-    ▼
-Investment Agent
-    │
-    ▼
-Planning Node
-    │
-    ├────────────┬───────────────┬──────────────┐
-    ▼            ▼               ▼              ▼
-Company Tool  Financial Tool   News Tool   Market Tool
-    └────────────┴───────────────┴──────────────┘
-                    ▼
-           Evidence Aggregator
-                    ▼
-          Investment Reasoning
-                    ▼
-         Recommendation Generator
-                    ▼
-           Report Formatter
-                    ▼
-              Structured JSON
+                 User
+                   │
+                   ▼
+           Investment Agent
+                   │
+                   ▼
+            Planning Node
+                   │
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+ Company Node  Financial Node  News Node
+        │          │          │
+        └──────────┼──────────┘
+                   ▼
+          Market Analysis Node
+                   ▼
+      Evidence Aggregation Node
+                   ▼
+     Investment Reasoning Node
+                   ▼
+    Recommendation Generator
+                   ▼
+       Report Formatter Node
+                   ▼
+        Structured JSON Report
 ```
 
 ---
 
 # Graph State
 
-The graph state is the shared memory between nodes.
+Every node reads from and writes to a shared graph state.
 
 ```ts
 interface GraphState {
@@ -71,9 +76,9 @@ interface GraphState {
 
   news?: NewsItem[];
 
-  marketData?: MarketData;
+  marketAnalysis?: MarketAnalysis;
 
-  evidence?: Evidence;
+  evidence?: EvidenceSummary;
 
   recommendation?: Recommendation;
 
@@ -83,58 +88,52 @@ interface GraphState {
 }
 ```
 
-Every node reads from and writes to the graph state.
-
-No node should mutate unrelated properties.
+Nodes should update only the fields they own.
 
 ---
 
 # Node Responsibilities
 
-## Planning Node
+## 1. Planning Node
 
 Purpose
 
-Initialize the graph.
+Initialize the workflow.
 
 Responsibilities
 
 * Validate company name.
-* Normalize company name.
-* Prepare initial graph state.
-
-Input
-
-companyName
+* Normalize input.
+* Create initial graph state.
 
 Output
 
-Validated graph state.
+Validated GraphState.
 
 ---
 
-## Company Research Node
+## 2. Company Research Node
 
 Purpose
 
-Understand the company.
+Understand the business.
 
 Collect
 
-* Business overview
+* Company overview
 * Industry
 * Headquarters
-* Products
-* Market position
-* Competitors
+* Core products
+* Business model
+* Major competitors
 
-Returns
+Output
 
 CompanyProfile
 
 ---
 
-## Financial Analysis Node
+## 3. Financial Analysis Node
 
 Purpose
 
@@ -143,21 +142,20 @@ Evaluate financial strength.
 Collect
 
 * Revenue
-* Profit
 * Net Income
 * EPS
-* Market Cap
-* PE Ratio
+* P/E Ratio
 * Debt
 * Cash Flow
+* Market Capitalization
 
-Return
+Output
 
 FinancialData
 
 ---
 
-## News Analysis Node
+## 4. News Analysis Node
 
 Purpose
 
@@ -165,86 +163,85 @@ Understand recent developments.
 
 Collect
 
-* Latest news
 * Product launches
-* Mergers
-* Acquisitions
 * Partnerships
-* Lawsuits
-* Regulatory updates
+* Acquisitions
+* Regulatory events
+* Legal issues
+* Significant announcements
 
-Return
+Output
 
-News[]
+NewsItem[]
 
 ---
 
-## Market Intelligence Node
+## 5. Market Analysis Node
 
 Purpose
 
-Understand market positioning.
+Evaluate competitive position.
 
-Collect
+Analyze
 
 * Industry trends
-* Growth outlook
-* Market share
+* Market growth
 * Competitive landscape
+* Business strengths
+* Business weaknesses
 
-Return
+Output
 
-MarketData
+MarketAnalysis
 
 ---
 
-## Evidence Aggregator Node
+## 6. Evidence Aggregation Node
 
 Purpose
 
-Combine outputs from all research nodes.
+Combine research results into one structured evidence object.
 
 Responsibilities
 
-* Remove duplicate information.
-* Group related findings.
-* Separate facts from assumptions.
-* Build structured evidence.
+* Remove duplicate findings.
+* Group related facts.
+* Separate facts from interpretations.
+* Prepare context for reasoning.
 
-Return
+Output
 
-Evidence
+EvidenceSummary
 
 ---
 
-## Investment Reasoning Node
+## 7. Investment Reasoning Node
 
 Purpose
 
-Perform the investment analysis.
+Generate an investment assessment using all collected evidence.
 
-The LLM should evaluate
+Evaluate
 
 * Business quality
-* Financial strength
-* Competitive advantage
+* Financial health
+* Market position
 * Growth opportunities
 * Risks
-* Valuation
 
-Return
+Output
 
-Recommendation draft.
+ReasoningResult
 
 ---
 
-## Recommendation Generator
+## 8. Recommendation Generator
 
 Purpose
 
-Generate final decision.
+Produce the final recommendation.
 
-Possible outputs
+Possible values
 
 * Invest
 * Watch
@@ -252,43 +249,75 @@ Possible outputs
 
 Also generate
 
-* Investment score
-* Confidence score
-* Key positives
-* Key risks
-* Investment thesis
+* Investment Score
+* Confidence
+* Key Positives
+* Key Risks
+* Investment Thesis
+
+Output
+
+Recommendation
 
 ---
 
-## Report Formatter
+## 9. Report Formatter Node
 
 Purpose
 
 Convert graph state into frontend-ready JSON.
 
-No markdown.
+Responsibilities
 
-No HTML.
+* Build the InvestmentReport object.
+* Ensure consistent structure.
+* Remove internal-only fields.
 
-Only structured JSON.
+Output
+
+InvestmentReport
+
+---
+
+# Prompt Strategy
+
+Every node owns exactly one prompt.
+
+Directory
+
+```text
+prompts/
+├── planning.ts
+├── company.ts
+├── financial.ts
+├── news.ts
+├── market.ts
+├── reasoning.ts
+├── recommendation.ts
+└── formatter.ts
+```
+
+Rules
+
+* One prompt per file.
+* No inline prompts.
+* Prompts return structured data only.
 
 ---
 
 # Tool Design
 
-The agent uses specialized tools.
-
----
+Each node may use one or more tools.
 
 ## Company Tool
 
 Input
 
-Company Name
+Company name.
 
-Output
+Returns
 
-Company Profile
+Company profile.
 
 ---
 
@@ -296,11 +325,11 @@ Company Profile
 
 Input
 
-Company Name
+Company name.
 
-Output
+Returns
 
-Financial Metrics
+Financial metrics.
 
 ---
 
@@ -308,11 +337,11 @@ Financial Metrics
 
 Input
 
-Company Name
+Company name.
 
-Output
+Returns
 
-Recent News
+Recent news.
 
 ---
 
@@ -320,124 +349,104 @@ Recent News
 
 Input
 
-Company Name
+Company name.
 
-Output
+Returns
 
-Industry Intelligence
-
----
-
-# Prompt Strategy
-
-Each node owns one prompt.
-
-Example
-
-```text
-prompts/
-    planning.ts
-    company.ts
-    financial.ts
-    news.ts
-    market.ts
-    reasoning.ts
-    recommendation.ts
-    formatter.ts
-```
-
-Never combine prompts.
-
-Each prompt has one responsibility.
+Market intelligence.
 
 ---
 
-# Recommendation Logic
+# Recommendation Framework
 
-The LLM should not make random decisions.
+The recommendation should consider multiple dimensions rather than relying on a single metric.
 
-It should evaluate multiple dimensions.
+Suggested evaluation areas
 
-Suggested weighting
+| Dimension           | Relative Importance |
+| ------------------- | ------------------- |
+| Business Quality    | High                |
+| Financial Health    | High                |
+| Market Position     | Medium              |
+| Growth Potential    | High                |
+| Risk Profile        | High                |
+| Recent Developments | Medium              |
 
-Business Quality → 20%
-
-Financial Health → 25%
-
-Growth Potential → 20%
-
-Risk Level → 20%
-
-Recent Developments → 15%
-
-These weights guide the reasoning process but do not require deterministic scoring.
+These are guidance signals for reasoning rather than fixed mathematical weights.
 
 ---
 
 # Report Structure
 
-The final report should contain
+Every completed report must contain
 
-* Company Summary
-* Industry
-* Financial Analysis
+* Company Overview
+* Financial Health
 * Market Position
 * Recent News
-* Opportunities
 * Risks
+* Growth Opportunities
+* Investment Recommendation
 * Investment Score
 * Confidence
-* Recommendation
 * Investment Thesis
 * Sources
+
+No Markdown.
+
+No HTML.
+
+Structured JSON only.
 
 ---
 
 # Error Handling
 
-Every node returns structured errors.
+Every node returns either a successful update to the graph state or a structured error.
 
 Example
 
 ```ts
 {
   success: false,
-  node: "Financial Analysis",
-  error: "Unable to fetch financial data."
+  node: "FinancialAnalysis",
+  error: "Financial data unavailable."
 }
 ```
 
-The graph should stop gracefully if a critical node fails.
+Critical failures stop the graph gracefully.
+
+Non-critical failures may continue with partial information.
 
 ---
 
 # Extensibility
 
-Future tools can be added without changing existing nodes.
+Future nodes can be added without changing the existing workflow.
 
 Examples
 
-* SEC Filing Tool
-* Earnings Call Tool
-* Analyst Ratings Tool
-* ESG Analysis Tool
-* Insider Trading Tool
-* Portfolio Analysis Tool
+* SEC Filing Analysis
+* Earnings Call Analysis
+* Analyst Consensus
+* Insider Trading
+* ESG Analysis
+* Portfolio Advisor
 
 ---
 
 # Engineering Principles
 
-Every node has a single responsibility.
+Each node has exactly one responsibility.
 
-Nodes communicate only through the graph state.
+Nodes communicate only through GraphState.
 
-Prompts are independent.
+Prompt files remain independent.
 
-Tools are reusable.
+Tools remain reusable.
 
-The agent should explain every recommendation.
+Reasoning should always be explainable.
 
-The frontend should never know how the reasoning process works.
+The frontend should never know how the agent reaches its conclusions.
 
 The LangGraph implementation should remain modular, testable, and easy to extend.

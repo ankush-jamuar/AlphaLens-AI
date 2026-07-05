@@ -2,72 +2,67 @@
 
 ## API Specification
 
-Version: 1.0
+Version: 2.0 (Frozen)
 
 ---
 
 # Purpose
 
-This document defines every API contract used by AlphaLens AI.
+This document defines the backend API contract for AlphaLens AI.
 
-All APIs must return structured JSON.
+The API is intentionally minimal.
 
-No HTML.
+The backend is responsible only for investment analysis.
 
-No Markdown.
-
-The frontend is responsible for presentation.
+History management is handled entirely on the client using browser localStorage.
 
 ---
 
 # API Principles
 
-* RESTful design
-* Predictable responses
-* Strong typing
-* Consistent error format
-* No business logic in UI
-* Validation before execution
+The API should be:
 
----
+* Simple
+* Predictable
+* Strongly typed
+* Stateless
+* Easy to extend
 
-# Base URL
+All responses must follow a consistent structure.
 
-Development
-
-/api
-
-Production
-
-/api
+The frontend should never depend on implementation details.
 
 ---
 
 # API Overview
 
-| Endpoint         | Method | Purpose               |
-| ---------------- | ------ | --------------------- |
-| /api/analyze     | POST   | Analyze a company     |
-| /api/history     | GET    | Get saved analyses    |
-| /api/history     | POST   | Save analysis         |
-| /api/history/:id | GET    | Retrieve one analysis |
-| /api/history/:id | DELETE | Delete analysis       |
+| Endpoint       | Method | Purpose                                                            |
+| -------------- | ------ | ------------------------------------------------------------------ |
+| `/api/analyze` | POST   | Analyze a public company and return a structured investment report |
 
-> **Note:** History is stored in browser localStorage for the MVP. These endpoints abstract storage access so the frontend remains independent of the persistence mechanism. In the future they can be backed by a database without changing the UI.
+No additional endpoints exist in Version 1.
 
 ---
 
 # POST /api/analyze
 
-Purpose
+## Purpose
 
-Start an investment analysis.
+Analyze a publicly listed company using the LangGraph Investment Agent and return a structured investment report.
 
 ---
 
 ## Request
 
-```json
+### Content-Type
+
+```text id="ggrkgx"
+application/json
+```
+
+### Request Body
+
+```json id="qukjlwm"
 {
   "companyName": "NVIDIA"
 }
@@ -75,280 +70,58 @@ Start an investment analysis.
 
 ---
 
-## Validation
+# Validation Rules
 
-companyName
+The backend validates the request before executing the AI workflow.
 
-Required
+Rules
 
-Minimum
+* Required field: `companyName`
+* Trim leading and trailing whitespace.
+* Minimum length: 2 characters.
+* Maximum length: 100 characters.
+* Reject empty strings.
+* Reject invalid characters.
 
-2 characters
-
-Maximum
-
-100 characters
-
-Trim whitespace.
-
-Reject empty strings.
+If validation fails, the AI workflow must not start.
 
 ---
 
-## Success Response
+# Successful Response
 
-HTTP
+HTTP Status
 
-200
+```text id="ls8kk0"
+200 OK
+```
 
-```json
+Response
+
+```json id="k6uybt"
 {
   "success": true,
-  "report": {
-    "company": {},
-    "financials": {},
-    "market": {},
-    "news": [],
-    "risks": [],
-    "opportunities": [],
-    "recommendation": {},
-    "sources": []
+  "data": {
+    "report": {
+      "company": {},
+      "financials": {},
+      "market": {},
+      "news": [],
+      "risks": [],
+      "opportunities": [],
+      "recommendation": {},
+      "sources": []
+    }
   }
 }
 ```
 
 ---
 
-## Error Response
+# Error Response Format
 
-HTTP
+Every error follows the same structure.
 
-400
-
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_COMPANY_NAME",
-    "message": "Please enter a valid company name."
-  }
-}
-```
-
----
-
-# GET /api/history
-
-Purpose
-
-Return previously saved analyses.
-
----
-
-## Success Response
-
-```json
-{
-  "success": true,
-  "history": []
-}
-```
-
-History items should be sorted newest first.
-
-Maximum
-
-20 items.
-
----
-
-# POST /api/history
-
-Purpose
-
-Persist a completed analysis.
-
----
-
-## Request
-
-```json
-{
-  "report": {}
-}
-```
-
----
-
-## Success
-
-```json
-{
-  "success": true
-}
-```
-
----
-
-# GET /api/history/:id
-
-Purpose
-
-Return a single report.
-
----
-
-## Success
-
-```json
-{
-  "success": true,
-  "report": {}
-}
-```
-
----
-
-# DELETE /api/history/:id
-
-Purpose
-
-Remove one report.
-
----
-
-## Success
-
-```json
-{
-  "success": true
-}
-```
-
----
-
-# Investment Report Schema
-
-Every completed report must follow this structure.
-
-```ts
-interface InvestmentReport {
-
-  company: {
-
-    name: string;
-
-    ticker?: string;
-
-    industry: string;
-
-    headquarters: string;
-
-    marketCap?: string;
-
-    description: string;
-
-  };
-
-  financials: {
-
-    revenue?: string;
-
-    netIncome?: string;
-
-    eps?: string;
-
-    peRatio?: string;
-
-    debt?: string;
-
-    cashFlow?: string;
-
-  };
-
-  market: {
-
-    competitors: string[];
-
-    strengths: string[];
-
-    weaknesses: string[];
-
-  };
-
-  news: NewsItem[];
-
-  risks: string[];
-
-  opportunities: string[];
-
-  recommendation: {
-
-    decision: "Invest" | "Watch" | "Pass";
-
-    score: number;
-
-    confidence: number;
-
-    thesis: string;
-
-    positives: string[];
-
-    negatives: string[];
-
-  };
-
-  sources: Source[];
-
-}
-```
-
----
-
-# News Schema
-
-```ts
-interface NewsItem {
-
-  title: string;
-
-  summary: string;
-
-  impact: "Positive" | "Neutral" | "Negative";
-
-}
-```
-
----
-
-# Source Schema
-
-```ts
-interface Source {
-
-  title: string;
-
-  url: string;
-
-}
-```
-
----
-
-# Standard API Response
-
-Every endpoint must follow this envelope.
-
-```json
-{
-  "success": true,
-  "data": {}
-}
-```
-
-or
-
-```json
+```json id="6h1o9g"
 {
   "success": false,
   "error": {
@@ -360,60 +133,202 @@ or
 
 ---
 
+# HTTP Status Codes
+
+| Status | Meaning                         |
+| ------ | ------------------------------- |
+| 200    | Analysis completed successfully |
+| 400    | Invalid request                 |
+| 404    | Company not found               |
+| 429    | Rate limit exceeded             |
+| 500    | Internal server error           |
+
+---
+
 # Error Codes
 
+Supported error codes
+
+```text id="f1p6qe"
 INVALID_COMPANY_NAME
 
 COMPANY_NOT_FOUND
 
 FINANCIAL_DATA_UNAVAILABLE
 
-NEWS_UNAVAILABLE
+NEWS_DATA_UNAVAILABLE
 
 LLM_ERROR
 
 RATE_LIMIT_EXCEEDED
 
+REQUEST_TIMEOUT
+
 UNKNOWN_ERROR
+```
+
+These codes should remain stable for future frontend compatibility.
 
 ---
 
-# HTTP Status Codes
+# Investment Report Schema
 
-200
+The AI must return the following structure.
 
-Success
+```ts id="ep6wzg"
+interface InvestmentReport {
 
-400
+  company: {
+    name: string;
+    ticker?: string;
+    industry: string;
+    headquarters: string;
+    description: string;
+    marketCap?: string;
+  };
 
-Bad Request
+  financials: {
+    revenue?: string;
+    netIncome?: string;
+    eps?: string;
+    peRatio?: string;
+    debt?: string;
+    cashFlow?: string;
+  };
 
-404
+  market: {
+    strengths: string[];
+    weaknesses: string[];
+    competitors: string[];
+  };
 
-Company not found
+  news: NewsItem[];
 
-429
+  risks: string[];
 
-Rate limit exceeded
+  opportunities: string[];
 
-500
+  recommendation: {
+    decision: "Invest" | "Watch" | "Pass";
+    score: number;
+    confidence: number;
+    thesis: string;
+    positives: string[];
+    negatives: string[];
+  };
 
-Unexpected server error
+  sources: Source[];
+}
+```
 
 ---
 
-# Validation Rules
+# NewsItem Schema
 
-Validate before calling LangGraph.
+```ts id="xghz6t"
+interface NewsItem {
+  title: string;
+  summary: string;
+  impact: "Positive" | "Neutral" | "Negative";
+}
+```
 
-Reject
+---
 
-* Empty strings
-* Extremely long names
-* Unsupported characters
-* Null values
+# Source Schema
 
-Normalize whitespace before processing.
+```ts id="6fz9y6"
+interface Source {
+  title: string;
+  url: string;
+}
+```
+
+---
+
+# API Response Envelope
+
+All successful responses must follow this structure.
+
+```json id="cpkpvi"
+{
+  "success": true,
+  "data": {}
+}
+```
+
+All failures must follow this structure.
+
+```json id="3zbbjo"
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Description"
+  }
+}
+```
+
+This format must remain consistent across future endpoints.
+
+---
+
+# Request Lifecycle
+
+```text id="lbzv9y"
+Client
+   │
+   ▼
+POST /api/analyze
+   │
+   ▼
+Validate Request
+   │
+   ▼
+Execute LangGraph
+   │
+   ▼
+Generate Report
+   │
+   ▼
+Return Structured JSON
+   │
+   ▼
+Frontend Renders Report
+   │
+   ▼
+Frontend Saves Report to localStorage
+```
+
+---
+
+# Timeout Strategy
+
+Maximum execution time
+
+```text id="qg8m0f"
+60 seconds
+```
+
+If exceeded
+
+Return
+
+```text id="y5m2yr"
+REQUEST_TIMEOUT
+```
+
+The frontend should display a friendly retry message.
+
+---
+
+# Security Requirements
+
+* Validate every request.
+* Never expose API keys.
+* Sanitize user input.
+* Reject malformed payloads.
+* Use environment variables for secrets.
 
 ---
 
@@ -421,58 +336,47 @@ Normalize whitespace before processing.
 
 Development
 
-Log execution time.
-
-Log node failures.
+* Request duration
+* Validation failures
+* Node execution errors
 
 Production
 
-Do not log API keys.
-
-Do not log sensitive information.
-
----
-
-# Timeout Strategy
-
-Maximum request duration
-
-60 seconds.
-
-If exceeded
-
-Return graceful timeout response.
+* Minimal logging
+* No sensitive information
+* No API keys
+* No full prompt logging
 
 ---
 
 # Future API Extensions
 
-These endpoints are intentionally left out of the MVP.
+The architecture supports future endpoints without changing the response format.
 
-Possible future additions
+Examples
 
-GET /api/compare
-
-POST /api/watchlist
-
-POST /api/portfolio
-
-GET /api/market-trends
+```text id="bgtmyl"
+POST /api/compare
 
 POST /api/reanalyze
 
+GET /api/market-trends
+
+POST /api/watchlist
+```
+
+These are intentionally excluded from Version 1.
+
 ---
 
-# API Design Principles
+# Engineering Principles
 
-The API should expose business capabilities rather than implementation details.
+The backend exposes business capabilities rather than implementation details.
 
-The frontend should never know how LangGraph works.
+The frontend should never understand LangGraph internals.
 
-The AI layer should never know how the UI is rendered.
+The API remains stateless.
 
-Every endpoint should remain stable even if the underlying implementation changes.
+Responses remain structured.
 
-Structured responses are mandatory.
-
-All API contracts should be versionable and easy to extend.
+The contract defined in this document is considered stable for Version 1.

@@ -2,7 +2,7 @@
 
 ## Implementation Roadmap
 
-Version: 1.0
+Version: 2.0 (Frozen)
 
 ---
 
@@ -10,169 +10,212 @@ Version: 1.0
 
 This document defines the implementation milestones for AlphaLens AI.
 
-The objective is to deliver the project in a controlled manner while ensuring that every milestone leaves the application in a stable and working state.
+The project should be implemented in sequential milestones.
 
-Every milestone must compile successfully before moving to the next.
+Each milestone must leave the application in a working, buildable state before moving to the next.
 
 ---
 
 # Project Goal
 
-Build a production-quality AI Investment Research Workspace using:
+Build a production-quality AI Investment Research Workspace that demonstrates:
 
-* Next.js
-* TypeScript
-* Tailwind CSS
-* shadcn/ui
-* LangChain.js
-* LangGraph.js
-* Gemini
-* Free APIs
-* Vercel
-
-The application should feel like a modern SaaS product rather than an assignment.
+* Modern AI engineering
+* LangGraph orchestration
+* Explainable AI
+* Clean software architecture
+* Professional UI/UX
 
 ---
 
-# Milestone Overview
+# Milestones
 
-| Milestone   | Status  | Goal                           |
-| ----------- | ------- | ------------------------------ |
-| Milestone 1 | Pending | Foundation & UI                |
-| Milestone 2 | Pending | AI Intelligence Engine         |
-| Milestone 3 | Pending | Production Polish & Deployment |
+| Milestone | Name              | Status  |
+| --------- | ----------------- | ------- |
+| 1         | Foundation        | Pending |
+| 2         | AI Engine         | Pending |
+| 3         | Production Polish | Pending |
 
 ---
 
 # Milestone 1
 
-## Foundation & User Interface
+## Foundation
 
 ### Goal
 
-Create the complete application foundation.
+Create the complete frontend foundation and project structure.
 
-No AI implementation should exist at this stage.
-
-The application should compile successfully.
+No AI functionality should be implemented during this milestone.
 
 ---
 
 ## Deliverables
 
-### Project Structure
+### Application Structure
 
-Create every required folder.
+Create the complete project structure.
 
-* app
-* components
-* hooks
-* lib
-* langgraph
-* nodes
-* prompts
-* services
-* types
-* utils
+Required folders
+
+```text
+app/
+components/
+hooks/
+langgraph/
+nodes/
+prompts/
+services/
+types/
+utils/
+lib/
+```
 
 ---
 
-### UI
+### Workspace
 
-Build the complete interface.
+Build the primary workspace located at
 
-Pages
+```
+/
+```
 
-* Home
-* Dashboard
-* Analysis Workspace
-* History
-* Not Found
+The workspace contains
+
+* Navbar
+* Sidebar
+* Search Area
+* Progress Area
+* Report Area
+
+---
+
+### Sidebar
+
+Implement
+
+* New Analysis
+* Recent Analyses
+
+Use realistic mock data.
+
+Do not implement localStorage yet.
+
+---
+
+### Search Area
+
+Implement
+
+* Search Input
+* Analyze Button
+* Suggested Companies
+
+Use placeholder interactions.
+
+---
+
+### Progress Timeline
+
+Implement the complete progress component.
+
+Display placeholder progress.
+
+No AI integration yet.
+
+---
+
+### Report Components
+
+Create all report cards using realistic mock investment data.
+
+Sections
+
+* Company Overview
+* Financial Health
+* Market Position
+* Recent News
+* Risks
+* Opportunities
+* Recommendation
+* Sources
 
 ---
 
 ### Shared Components
 
-Create reusable components.
+Implement reusable components.
 
 Examples
 
-* Navbar
-* Sidebar
-* Search Box
 * Metric Card
-* Report Card
-* Recommendation Badge
-* Skeleton Loader
+* Section Header
 * Empty State
 * Error State
+* Skeleton Loader
 
 ---
 
-### Theme
+### Styling
 
 Implement
 
-* Dark Mode
-* Responsive Layout
+* Dark theme
+* Responsive layout
 * Typography
-* Global Theme
+* Icons
+* Animations
 
 ---
 
 ### API
 
-Create placeholder API routes.
+Create placeholder endpoint
 
-No business logic yet.
+```
+POST /api/analyze
+```
+
+Return
+
+```
+501 Not Implemented
+```
+
+Include TODO markers for Milestone 2.
 
 ---
 
-### Types
+### Hooks
 
-Define shared interfaces.
+Create placeholder hooks.
 
-Examples
+* useAnalysis
+* useHistory
 
-Company
-
-FinancialData
-
-NewsItem
-
-InvestmentReport
-
-Recommendation
-
-AnalysisState
+Do not implement business logic.
 
 ---
 
 ### Acceptance Criteria
 
-Application compiles.
-
-Responsive.
-
-Navigation works.
-
-Components reusable.
-
-Folder structure complete.
-
-No AI logic yet.
+* Application builds successfully.
+* Workspace is responsive.
+* Navigation works.
+* Mock report renders correctly.
+* Components are reusable.
+* No AI implementation exists.
 
 ---
 
 # Milestone 2
 
-## AI Intelligence Engine
+## AI Engine
 
 ### Goal
 
-Implement the complete AI workflow.
-
-The application should generate real investment reports.
+Implement the complete AI Investment Agent.
 
 ---
 
@@ -180,65 +223,36 @@ The application should generate real investment reports.
 
 ### LangGraph
 
-Create the Investment Intelligence Pipeline.
+Implement the graph defined in
 
-Nodes
-
-Company Research
-
-↓
-
-Financial Analysis
-
-↓
-
-News Analysis
-
-↓
-
-Risk Analysis
-
-↓
-
-Growth Analysis
-
-↓
-
-Decision Engine
-
-↓
-
-Report Formatter
+```
+LANGGRAPH_DESIGN.md
+```
 
 ---
 
-### Gemini
+### Nodes
 
-Integrate Gemini.
+Implement
 
-Use structured JSON outputs.
-
-No markdown responses.
+* Company Research
+* Financial Analysis
+* News Analysis
+* Market Analysis
+* Evidence Aggregation
+* Investment Reasoning
+* Recommendation
+* Report Formatting
 
 ---
 
-### Prompt System
+### Prompt Layer
 
-Create prompt files.
+Create prompt templates.
 
-Each prompt has one responsibility.
+One prompt per node.
 
-Examples
-
-companyResearch.ts
-
-financialAnalysis.ts
-
-riskAnalysis.ts
-
-decision.ts
-
-reportFormatter.ts
+No inline prompts.
 
 ---
 
@@ -246,51 +260,41 @@ reportFormatter.ts
 
 Integrate
 
-Financial Data API
+* Gemini
+* Financial Data API
+* Company Research API (if required)
 
-Search API
-
-Company Profile API
-
-All services should be isolated.
+Each integration belongs in the services layer.
 
 ---
 
-### Investment Engine
+### Report Generation
 
-Generate
+Generate structured JSON.
 
-Investment Score
-
-Recommendation
-
-Confidence
-
-Investment Thesis
-
-Structured Report
+Do not return Markdown.
 
 ---
 
 ### History
 
-Persist previous analyses locally using browser localStorage.
+Replace mock history with browser localStorage.
 
-The history should survive page refreshes and allow users to reopen previous reports.
+Maximum
+
+20 reports.
+
+Newest first.
 
 ---
 
 ### Acceptance Criteria
 
-Company analysis works.
-
-Pipeline executes successfully.
-
-Structured report generated.
-
-History works.
-
-Errors handled gracefully.
+* Company analysis works.
+* LangGraph executes successfully.
+* Reports are generated correctly.
+* History persists across refreshes.
+* Errors handled gracefully.
 
 ---
 
@@ -300,79 +304,38 @@ Errors handled gracefully.
 
 ### Goal
 
-Transform the MVP into a polished AI product.
+Prepare the application for deployment and demonstration.
 
 ---
 
 ## Deliverables
 
-### UX
+### User Experience
 
-Progress Timeline
+Improve
 
-Animated loading
-
-Better transitions
-
-Improved empty states
-
----
-
-### Reports
-
-Improve report layout.
-
-Better hierarchy.
-
-Readable cards.
-
-Professional spacing.
-
----
-
-### Export
-
-Export report to PDF.
+* Loading animations
+* Empty states
+* Error handling
+* Accessibility
+* Mobile responsiveness
 
 ---
 
 ### Performance
 
-Optimize rendering.
+Optimize
 
-Reduce unnecessary re-renders.
-
-Lazy load heavy components.
-
----
-
-### Accessibility
-
-Keyboard support.
-
-ARIA labels.
-
-Focus states.
+* Rendering
+* API calls
+* Bundle size
+* Component loading
 
 ---
 
-### Error Handling
+### Export
 
-Friendly error messages.
-
-Retry support.
-
-Validation.
-
----
-
-### Deployment
-
-Deploy to Vercel.
-
-Production environment variables.
-
-Verify build.
+Allow users to export reports as PDF.
 
 ---
 
@@ -380,31 +343,31 @@ Verify build.
 
 Complete
 
-README.md
+* README
+* AI Prompt Log
+* Example Runs
+* Architecture Notes
+* Trade-offs
 
-Architecture
+---
 
-AI Prompt Log
+### Deployment
 
-Example Runs
+Deploy on Vercel.
 
-Trade-offs
+Verify production build.
 
-Future Improvements
+Configure environment variables.
 
 ---
 
 ### Acceptance Criteria
 
-Application deployed.
-
-Responsive.
-
-Fast.
-
-Professional.
-
-Interview ready.
+* Application deployed.
+* Responsive on desktop and mobile.
+* Export works.
+* Documentation complete.
+* Project ready for technical interviews.
 
 ---
 
@@ -412,67 +375,52 @@ Interview ready.
 
 Every milestone must satisfy the following requirements.
 
-The application must compile successfully.
+* The application must compile successfully.
+* No broken routes.
+* No unused code.
+* No duplicated components.
+* Leave TODO markers only where the next milestone connects.
 
-No broken routes.
-
-No unused files.
-
-No placeholder logic left behind unless explicitly marked as TODO.
-
-Every component should have one responsibility.
-
-Business logic should never exist inside UI components.
-
-Reusable components should always be preferred over duplication.
+Do not implement future milestones early.
 
 ---
 
-# AI Development Workflow
+# Implementation Order
 
-Before every implementation task:
+Always follow this order.
 
-1. Read all files inside the docs directory.
-2. Verify the requested milestone.
-3. Implement only the requested scope.
-4. Do not introduce features from future milestones.
-5. If an implementation decision conflicts with the documentation, follow the documentation.
-6. If documentation is ambiguous, stop and explain the ambiguity instead of making assumptions.
+1. Read all documentation in `/docs`.
+2. Implement only the requested milestone.
+3. Verify the application builds.
+4. Verify TypeScript has no errors.
+5. Verify responsive layout.
+6. Commit changes.
+7. Move to the next milestone.
 
 ---
 
 # Definition of Done
 
-The project is considered complete when:
+The project is complete when:
 
-* Users can analyze a public company.
-* The AI agent researches the company using external data.
+* A user can analyze a public company.
+* The AI agent researches and evaluates the company.
 * A structured investment report is generated.
-* Reports include reasoning, risks, opportunities, confidence, and sources.
-* Previous analyses are available from local history.
+* Previous analyses are stored locally.
 * Reports can be exported as PDF.
 * The application is fully responsive.
-* The application is deployed successfully.
+* The application is deployed.
 * Documentation is complete.
-* AI prompt history is included.
-* Every architectural decision can be clearly explained during technical interviews.
+* Every design decision can be explained confidently during a technical interview.
 
 ---
 
 # Engineering Philosophy
 
-AlphaLens AI is not intended to be a chatbot.
+The roadmap prioritizes stability over speed.
 
-It is an AI-powered investment research workspace.
+Each milestone should produce a working application.
 
-Every engineering decision should improve:
+The project should evolve incrementally while preserving clean architecture and maintainable code.
 
-* Explainability
-* Reliability
-* Maintainability
-* User experience
-* Product quality
-
-The AI workflow is the core of the application.
-
-All other features exist to support that workflow rather than compete with it.
+The final result should resemble a production AI product rather than a classroom assignment.

@@ -1,37 +1,34 @@
-# AlphaLens AI - AI Development Context
+# AlphaLens AI
 
-This document provides permanent implementation guidance for all AI-assisted development.
+## AI Development Context
 
-Every implementation must follow these rules unless explicitly instructed otherwise.
+Version: 2.0 (Frozen)
 
 ---
 
-# Project Overview
+# Purpose
+
+This document defines the engineering standards for AlphaLens AI.
+
+Every AI-assisted implementation must follow these rules.
+
+If any generated code conflicts with this document, this document takes priority.
+
+---
+
+# Project Summary
 
 AlphaLens AI is an AI-powered Investment Research Workspace.
 
-The application should feel like a production-ready SaaS application rather than an AI demo.
+The application allows users to analyze public companies and receive an explainable investment recommendation.
 
-The primary focus is the quality of the AI workflow.
+The primary objective is to demonstrate modern AI engineering using LangChain.js and LangGraph.js.
 
----
-
-# Development Philosophy
-
-Always prefer:
-
-* Simplicity
-* Readability
-* Maintainability
-* Scalability
-
-Avoid unnecessary abstractions.
-
-Avoid overengineering.
+The application should feel like a polished SaaS product rather than an AI demo.
 
 ---
 
-# Tech Stack
+# Technology Stack
 
 Framework
 
@@ -44,41 +41,66 @@ Language
 Styling
 
 * Tailwind CSS
+
+UI Components
+
 * shadcn/ui
 
-Animation
+Animations
 
 * Framer Motion
 
-AI
+AI Framework
 
 * LangChain.js
+
+Agent Framework
+
 * LangGraph.js
+
+LLM
+
 * Gemini 2.5 Flash
 
 Deployment
 
 * Vercel
 
+Storage
+
+* Browser localStorage
+
 ---
 
 # Architecture Rules
 
-Use App Router.
+The project follows a layered architecture.
 
-Use Server Components where appropriate.
+UI Layer
 
-Use Client Components only when necessary.
+↓
 
-Never place business logic inside UI components.
+API Layer
 
-Separate:
+↓
 
-* UI
-* AI
-* Services
-* Utilities
-* Prompts
+AI Layer
+
+↓
+
+External Services
+
+↓
+
+Structured JSON
+
+↓
+
+UI Rendering
+
+Each layer has one responsibility.
+
+Layers should remain independent.
 
 ---
 
@@ -86,19 +108,23 @@ Separate:
 
 app/
 
-Routing only.
+Routing and API endpoints only.
 
 components/
 
-Reusable UI.
+Reusable UI components.
+
+hooks/
+
+Reusable React hooks.
 
 langgraph/
 
-Graph construction.
+Graph construction and orchestration.
 
 nodes/
 
-Each AI node.
+Individual LangGraph nodes.
 
 prompts/
 
@@ -106,150 +132,276 @@ Prompt templates.
 
 services/
 
-External APIs.
-
-lib/
-
-Shared utilities.
+External API wrappers.
 
 types/
 
 Shared interfaces.
 
-hooks/
+utils/
 
-Reusable hooks.
+Pure utility functions.
+
+lib/
+
+Shared constants and helper functions.
+
+docs/
+
+Project documentation.
 
 ---
 
-# Coding Rules
+# Coding Standards
 
 Use TypeScript everywhere.
 
-Never use "any".
+Never use `any` unless there is no practical alternative.
 
-Prefer interfaces.
+Prefer interfaces over loosely typed objects.
 
 Prefer named exports.
 
-Keep functions small.
+Keep files focused.
 
-Avoid duplicate code.
+One responsibility per component.
+
+One responsibility per function.
 
 Avoid deeply nested logic.
 
-Write self-documenting code.
+Avoid unnecessary abstractions.
 
 ---
 
-# Prompt Rules
+# React Guidelines
 
-Never hardcode prompts inside components.
+Use Server Components by default.
 
-Every prompt must exist as its own file.
+Use Client Components only when required for:
 
-Prompts should have one responsibility.
+* User interaction
+* Animations
+* Browser APIs
+* localStorage
+* React hooks
+
+Do not convert everything into Client Components.
+
+---
+
+# Component Rules
+
+Components should be presentation-focused.
+
+Components must not contain:
+
+* API requests
+* Prompt logic
+* LangGraph logic
+* Financial calculations
+
+Business logic belongs in hooks, services, or utilities.
+
+---
+
+# State Management
+
+Use React state.
+
+Use custom hooks where appropriate.
+
+Do not introduce Redux, Zustand, MobX, or unnecessary Context providers.
+
+Keep state as close as possible to where it is used.
+
+---
+
+# Prompt Engineering
+
+Every prompt must exist in the `prompts/` directory.
+
+Never embed prompts inside React components.
+
+Every prompt should have one responsibility.
+
+Prompt outputs must be structured.
 
 ---
 
 # LangGraph Rules
 
-Each node should perform only one task.
+Every node performs exactly one responsibility.
 
-Nodes communicate using structured objects.
+Nodes communicate only through the shared graph state.
 
-Never return markdown.
+Nodes must not directly manipulate UI concerns.
 
-Never return HTML.
-
-Return typed JSON only.
+Graph outputs should always be structured JSON.
 
 ---
 
-# UI Guidelines
+# API Rules
 
-Design should feel premium.
+Expose only business capabilities.
 
-Minimal.
+The frontend should never know implementation details.
 
-Modern.
+Validate all incoming requests.
 
-Professional.
+Return consistent response envelopes.
 
-Use whitespace generously.
-
-Avoid clutter.
-
-Do not imitate ChatGPT.
-
-Do not build a chat interface.
-
-The application is an analytics dashboard.
+Never expose API keys.
 
 ---
 
-# UX Rules
+# Storage Rules
 
-Always show progress.
+Use browser localStorage only.
 
-Never leave users waiting without feedback.
+History is stored locally.
 
-Every long-running operation should display meaningful progress.
+Maximum history size:
+
+20 reports.
+
+Remove the oldest report when the limit is exceeded.
 
 ---
 
 # Error Handling
 
-Every API call should be wrapped in try/catch.
+Validate inputs before processing.
 
-Display user-friendly errors.
+Handle API failures gracefully.
 
-Never expose stack traces.
+Return user-friendly error messages.
+
+Never expose stack traces to users.
+
+Log useful debugging information only during development.
 
 ---
 
 # Performance
 
-Lazy load heavy components.
+Avoid unnecessary re-renders.
 
-Avoid unnecessary renders.
+Memoize expensive computations when appropriate.
 
-Optimize API usage.
+Lazy-load heavy UI sections.
+
+Avoid duplicate API calls.
+
+Keep bundle size reasonable.
+
+---
+
+# UI Philosophy
+
+The application should resemble a modern AI workspace.
+
+Design inspiration:
+
+* Linear
+* Vercel
+* Notion
+* Perplexity
+
+Do not imitate ChatGPT.
+
+The workspace should feel calm, minimal, and professional.
+
+Whitespace is preferred over visual clutter.
+
+---
+
+# Animation Guidelines
+
+Animations should communicate progress.
+
+Prefer:
+
+* Fade
+* Slide
+* Scale
+
+Avoid excessive motion.
+
+Animations should never distract from the content.
 
 ---
 
 # Accessibility
 
-Semantic HTML.
+Use semantic HTML.
 
-Keyboard navigation.
+Provide keyboard accessibility.
 
-ARIA labels where necessary.
+Maintain sufficient color contrast.
 
-Good color contrast.
+Use ARIA attributes where appropriate.
 
 ---
 
 # Security
 
-Never expose API keys.
+Store secrets only in environment variables.
 
-Use environment variables.
+Never commit API keys.
 
-Validate every API request.
+Validate user input.
 
----
+Sanitize company names before external requests.
 
-# Documentation
-
-Code should be easy to explain during interviews.
-
-Prioritize clarity over cleverness.
+Do not trust client input.
 
 ---
 
-# Development Goal
+# Documentation Rules
 
-Build software that looks like it was created by an AI Product Engineer working at a startup.
+Generated code should be easy to understand.
 
-Every engineering decision should support that objective.
+Avoid unnecessary comments.
+
+Write comments only when they explain intent rather than implementation.
+
+Public functions should have clear names that reduce the need for comments.
+
+---
+
+# Future-Proofing
+
+Design every module so it can be extended without major refactoring.
+
+Future features such as authentication, cloud storage, watchlists, and portfolio management should be possible without changing the existing architecture.
+
+---
+
+# Development Workflow
+
+For every implementation task:
+
+1. Read all documentation inside `/docs`.
+2. Follow the documented architecture.
+3. Implement only the requested milestone.
+4. Do not introduce future features.
+5. Leave TODO markers only where the next milestone connects.
+6. Ensure the application builds successfully before considering the task complete.
+
+---
+
+# Engineering Philosophy
+
+AlphaLens AI should demonstrate thoughtful software engineering.
+
+Every implementation should optimize for:
+
+* Clarity
+* Maintainability
+* Explainability
+* Product quality
+
+The objective is not to write the most code.
+
+The objective is to build software that is clean, reliable, and easy to extend while showcasing strong AI engineering practices.

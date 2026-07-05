@@ -1,50 +1,88 @@
-AlphaLens AI
-Product UI & UX Specification
-Design Philosophy
+# AlphaLens AI
 
-AlphaLens AI should feel like a premium AI workspace rather than a chatbot.
+## UI & UX Specification
 
-The interface should communicate:
+Version: 2.0 (Frozen)
 
-Professional
-Intelligent
-Fast
-Trustworthy
-Minimal
+---
 
-Avoid unnecessary colors, clutter, or decorative elements.
+# Purpose
 
-Every screen should focus the user's attention on the investment report.
+This document defines the visual language, layout, interaction patterns, and user experience for AlphaLens AI.
 
-Inspiration
+The goal is to create an interface that feels like a modern AI workspace rather than a chatbot or dashboard template.
 
-Use inspiration from:
+---
 
-Linear
-Vercel Dashboard
-Perplexity
-Stripe Dashboard
-Notion
+# Design Philosophy
 
-Avoid ChatGPT-style conversation layouts.
+AlphaLens AI should communicate:
 
-Color Palette
+* Intelligence
+* Trust
+* Simplicity
+* Focus
+* Professionalism
 
-Background
+The interface should minimize distractions and maximize readability.
+
+Every screen should direct attention toward the investment analysis.
+
+---
+
+# Design Inspiration
+
+Primary inspiration:
+
+* Linear
+* Vercel Dashboard
+* Perplexity
+* Notion
+* Stripe Dashboard
+
+Avoid:
+
+* ChatGPT-style chat windows
+* Marketing landing pages
+* Excessive gradients
+* Heavy glassmorphism
+* Flashy animations
+
+---
+
+# Color Palette
+
+## Background
+
+Primary
 
 #09090B
 
-Card
+Secondary
 
 #111827
 
-Primary Accent
+Surface
+
+#18181B
+
+---
+
+## Accent
+
+Primary
 
 Emerald
 
-Secondary Accent
+Used for:
 
-Blue
+* Analyze button
+* Success states
+* Positive indicators
+
+---
+
+## Status Colors
 
 Success
 
@@ -54,212 +92,300 @@ Warning
 
 Amber
 
-Danger
+Error
 
 Red
 
-Text
+Information
+
+Blue
+
+Neutral
+
+Slate
+
+---
+
+## Text
+
+Primary
 
 White
 
-Muted Text
+Secondary
 
-Gray
+Slate 300
 
-Typography
+Muted
 
-Large bold headings.
+Slate 500
 
-Comfortable spacing.
+---
 
-Readable paragraphs.
+# Typography
 
-No tiny fonts.
+Use clean typography with generous spacing.
 
-Layout
+Heading
+
+Large
+
+Bold
+
+Readable
+
+Body
+
+16px
+
+Comfortable line height
+
+Cards should avoid dense text.
+
+---
+
+# Layout
 
 Desktop
 
+```text
+-------------------------------------------------------
 Navbar
+-------------------------------------------------------
 
 Sidebar | Main Workspace
 
-Sidebar width
+Sidebar (280px)
 
-260px
+Main Workspace (Flexible)
 
-Main area
+-------------------------------------------------------
+```
 
-Flexible
+The main workspace should always receive the majority of the available width.
 
-Cards should never exceed comfortable reading width.
+---
 
-Navbar
+# Navbar
+
+Height
+
+64px
+
+Contents
 
 Left
 
-AlphaLens AI Logo
-
-Center
-
-Empty
+* AlphaLens AI Logo
 
 Right
 
-Theme Toggle
+* GitHub Link
 
-GitHub
+No user profile.
 
-User Avatar (future)
+No theme switch.
 
-Sidebar
+No unnecessary controls.
 
-Sections
+---
 
-New Analysis
+# Sidebar
 
-History
+Desktop
 
-Saved Reports
+Collapsible.
 
-Documentation
+Default
 
-Settings (future)
+Expanded.
 
-Recent company analyses appear below.
+Mobile
 
-Each history item displays:
+Slide-out drawer.
 
-Company Name
-Recommendation Badge
-Timestamp
-Main Workspace
+---
 
-Contains
+## Sidebar Sections
 
-Search Section
+### New Analysis
+
+Primary action.
+
+Always visible.
+
+---
+
+### Recent Analyses
+
+Display
+
+Maximum
+
+20 analyses.
+
+Each item displays
+
+* Company Name
+* Recommendation Badge
+* Timestamp
+
+Selecting an item immediately loads the report.
+
+---
+
+# Main Workspace
+
+The workspace is divided into three vertical sections.
+
+1.
+
+Search Area
 
 ↓
+
+2.
 
 Analysis Progress
 
 ↓
 
+3.
+
 Investment Report
 
-Search Section
+---
 
-Large centered search input.
+# Search Area
+
+Position
+
+Top of workspace.
+
+Contents
+
+Large search input.
+
+Analyze button.
+
+Suggested companies.
 
 Placeholder
 
 "Analyze a public company..."
 
-Examples below the input
+Suggested companies
 
-Apple
+* Apple
+* NVIDIA
+* Microsoft
+* Amazon
+* Reliance Industries
+* Tata Consultancy Services
 
-NVIDIA
+Clicking a suggestion fills the input.
 
-Tesla
+---
 
-Reliance
+# Analysis Progress
 
-Microsoft
+Displayed only during analysis.
 
-Button
-
-Analyze
-
-Analysis Progress
-
-Instead of a spinner
-
-Display progress timeline.
+Instead of a spinner, show meaningful progress.
 
 Example
 
 ✓ Understanding company
 
+✓ Researching business
+
 ✓ Collecting financial data
 
-✓ Reading recent news
+✓ Reading latest news
 
-✓ Evaluating risks
+✓ Evaluating market position
 
-✓ Finding growth opportunities
+✓ Assessing investment risks
 
-✓ Writing investment thesis
+✓ Building investment thesis
 
-Animate each step.
+✓ Preparing report
 
-Investment Report
+Progress should animate smoothly.
 
-Top Summary Card
+Later these steps map directly to LangGraph nodes.
 
-Contains
+---
 
-Company Logo
+# Investment Report
 
-Company Name
+The report occupies most of the workspace.
 
-Industry
+Sections appear vertically.
 
-Country
+---
 
-Market Cap
+## Executive Summary
 
-Recommendation Badge
+Displays
 
-Investment Score
+* Company Name
+* Industry
+* Headquarters
+* Recommendation
+* Investment Score
+* Confidence
 
-Confidence
+This is the hero section.
 
-Generated Time
+---
 
-Executive Summary
+## Company Overview
 
-Short paragraph.
+Displays
 
-Maximum
+* Business description
+* Core products
+* Industry
+* Market position
 
-120 words.
+---
 
-Financial Health Card
+## Financial Health
 
-Cards
+Metric cards
 
 Revenue
 
-Profit
+Net Income
 
 EPS
 
-P/E
+P/E Ratio
 
 Debt
 
 Cash Flow
 
-Use clean metrics.
+Unavailable metrics should display "Not Available" gracefully.
 
-Market Position Card
+---
 
-Business Model
+## Market Position
 
-Competitors
+Displays
 
 Strengths
 
 Weaknesses
 
-News Card
+Competitors
+
+---
+
+## Recent News
 
 Display
-
-Latest developments.
-
-Each news item
 
 Headline
 
@@ -273,77 +399,72 @@ Neutral
 
 Negative
 
-Risk Card
+Limit to the most relevant items.
+
+---
+
+## Risks
 
 Display
 
 Risk Level
 
-High
+Key risks
 
-Medium
+Bulleted format.
 
-Low
+---
 
-Below it
+## Opportunities
 
-Risk bullets.
+Display
 
-Opportunity Card
+Growth opportunities.
 
-Future Growth
+Expansion.
 
-Expansion
+Innovation.
 
-Innovation
+Industry trends.
 
-Market Trends
+---
 
-AI
+## Recommendation
 
-International Markets
+This section receives the strongest visual emphasis.
 
-Recommendation Card
+Display
 
-This is the hero section.
-
-Large score
-
-Example
-
-87 / 100
+Investment Score
 
 Recommendation
 
-Invest
-
 Confidence
-
-91%
 
 Investment Thesis
 
-One paragraph.
+Key Positives
 
-Sources Card
+Key Risks
 
-Display clickable source list.
+---
 
-Example
+## Sources
 
-Reuters
+Display every reference used by the AI.
 
-Yahoo Finance
+Each source should include
 
-Company Annual Report
+* Title
+* URL
 
-SEC Filing
+Links open in a new tab.
 
-Alpha Vantage
+---
 
-Empty State
+# Empty State
 
-Illustration
+Displayed before the first analysis.
 
 Headline
 
@@ -351,64 +472,108 @@ Start your first investment analysis
 
 Description
 
-Enter a company name to generate an AI-powered investment report.
+Enter the name of a public company to generate an AI-powered investment report.
 
-Error State
+Include a simple illustration or icon.
 
-Friendly.
+---
 
-Not technical.
+# Error State
+
+Friendly language.
 
 Example
 
-We couldn't complete the analysis.
+"We couldn't complete the analysis."
 
-Please try again.
+Provide a Retry button.
+
+Never display technical error messages.
+
+---
+
+# Loading Skeletons
+
+Every report section should have its own skeleton.
+
+Avoid layout shifts.
+
+The interface should remain stable while data loads.
+
+---
+
+# Animations
+
+Use subtle animations only.
+
+Preferred
+
+* Fade
+* Slide
+* Scale
+
+Avoid excessive motion.
+
+Animation should reinforce progress rather than attract attention.
+
+---
+
+# Responsive Behavior
+
+Desktop
+
+Sidebar visible.
+
+Tablet
+
+Sidebar collapsible.
 
 Mobile
 
-Sidebar collapses.
+Sidebar becomes a drawer.
 
 Cards stack vertically.
 
-Search remains at top.
+Search remains at the top.
 
-Animations
+The Analyze button remains easily accessible.
 
-Subtle only.
+---
 
-Fade
-
-Slide
-
-Scale
-
-Avoid flashy effects.
-
-Icons
-
-Lucide Icons.
-
-Consistent style.
-
-Accessibility
+# Accessibility
 
 Keyboard navigation.
 
-Proper focus states.
+Visible focus states.
 
-High contrast.
+Semantic HTML.
 
-ARIA labels.
+ARIA labels where appropriate.
 
-UX Goals
+Color contrast should meet accessibility standards.
 
-The application should make the user feel that:
+---
 
-The AI is researching.
+# UX Principles
 
-Not simply generating text.
+The user should feel that the AI is actively researching the company.
 
-Every interaction should reinforce trust.
+The application should never feel like it is simply waiting for an API response.
 
-The interface should feel like a modern AI product that could be shipped by a startup today.
+The interface should remain calm, predictable, and easy to understand.
+
+Every interaction should reinforce confidence in the AI's reasoning process.
+
+---
+
+# Definition of Good UX
+
+A successful experience is one where a first-time user can:
+
+1. Open the application.
+2. Understand its purpose immediately.
+3. Analyze a company without guidance.
+4. Read the investment report comfortably.
+5. Reopen previous analyses effortlessly.
+
+The interface should require little to no explanation.
