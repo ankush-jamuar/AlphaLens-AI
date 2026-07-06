@@ -9,21 +9,20 @@ export function reasoningPrompt(companyName: string, evidence: EvidenceSummary):
 Evidence Summary:
 ${JSON.stringify(evidence, null, 2)}
 
-Provide an explainable investment recommendation. Include:
-1. Decision: "Invest", "Watch", or "Pass"
-2. Score: 0-100 (overall investment score)
-3. Confidence: 0-100% (confidence in this assessment)
-4. Thesis: Comprehensive investment thesis.
-5. Key positives: Bulleted list of key positive points.
-6. Key negatives/risks: Bulleted list of key risk factors.
-
-Return a JSON object matching this schema:
+Provide an explainable investment recommendation and evaluation.
+Return a structured JSON object matching this schema:
 {
   "decision": "Invest" | "Watch" | "Pass",
-  "score": 85,
-  "confidence": 90,
+  "score": 0-100 (overall investment score),
+  "confidence": 0-100 (overall confidence score),
+  "evidenceQuality": "High" | "Medium" | "Low",
+  "financialConfidence": 0-100 (confidence in financial statements),
+  "marketConfidence": 0-100 (confidence in market analysis),
+  "newsConfidence": 0-100 (confidence in recent news),
   "thesis": "Detailed investment thesis explanation...",
-  "positives": ["Positive 1", "Positive 2"],
-  "negatives": ["Negative 1", "Negative 2"]
+  "positives": ["Positive factor 1", "Positive factor 2"],
+  "negatives": ["Negative/Risk factor 1", "Negative/Risk factor 2"],
+  "growthOpportunities": ["Key growth opportunity 1", "Key growth opportunity 2"],
+  "risks": ["Key risk factor 1", "Key risk factor 2"]
 }`;
 }

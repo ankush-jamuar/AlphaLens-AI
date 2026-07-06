@@ -1,51 +1,88 @@
 import type { GraphState } from "@/langgraph";
+import type { EvidenceSummary } from "@/types";
 
 /**
  * Evidence Aggregation Node
- * Combines information from preceding nodes into a unified EvidenceSummary object.
+ * Programmatically combines data from preceding nodes into an EvidenceSummary object.
+ * Does not call Gemini/LLM.
  */
 export async function evidenceNode(state: GraphState): Promise<Partial<GraphState>> {
-  // TODO [Milestone 2.2]: Deduplicate, organize, and synthesize facts into EvidenceSummary
-  const keyFacts = [
-    `Company Profile resolved for ${state.companyProfile?.name || state.companyName}`,
-    `Industry: ${state.companyProfile?.industry || "Unknown"}`,
-    `Headquarters: ${state.companyProfile?.headquarters || "Unknown"}`,
-  ];
+  const profile = state.companyProfile;
+  const financials = state.financialData;
+  const news = state.news ?? [];
+  const market = state.marketAnalysis;
 
-  const financialHighlights = [
-    `Revenue: ${state.financialData?.revenue || "Not available"}`,
-    `Net Income: ${state.financialData?.netIncome || "Not available"}`,
-    `P/E Ratio: ${state.financialData?.peRatio || "Not available"}`,
-  ];
+  const keyFacts: string[] = [];
+  if (profile) {
+    keyFacts.push(`Company Name: ${profile.name}`);
+    if (profile.ticker) keyFacts.push(`Ticker: ${profile.ticker}`);
+    keyFacts.push(`Industry: ${profile.industry}`);
+    keyFacts.push(`Headquarters: ${profile.headquarters}`);
+    keyFacts.push(`Description: ${profile.description}`);
+    if (profile.marketCap) keyFacts.push(`Market Cap: ${profile.marketCap}`);
+  } else {
+    keyFacts.push(`Company Name: ${state.companyName}`);
+  }
 
-  const newsHighlights = (state.news ?? []).map(
-    (item) => `${item.title} (Impact: ${item.impact})`
+  const financialHighlights: string[] = [];
+  if (financials) {
+    if (financials.revenue) financialHighlights.push(`Revenue: ${financials.revenue}`);
+    if (financials.netIncome) financialHighlights.push(`Net Income: ${financials.netIncome}`);
+    if (financials.eps) financialHighlights.push(`EPS: ${financials.eps}`);
+    if (financials.peRatio) financialHighlights.push(`P/E Ratio: ${financials.peRatio}`);
+    if (financials.debt) financialHighlights.push(`Debt: ${financials.debt}`);
+    if (financials.cashFlow) financialHighlights.push(`Cash Flow: ${financials.cashFlow}`);
+  }
+
+  const newsHighlights = news.map(
+    (item) => `${item.title} (Impact: ${item.impact}) — ${item.summary}`
   );
 
-  const marketInsights = [
-    `Strengths: ${(state.marketAnalysis?.strengths ?? []).join(", ")}`,
-    `Weaknesses: ${(state.marketAnalysis?.weaknesses ?? []).join(", ")}`,
-    `Competitors: ${(state.marketAnalysis?.competitors ?? []).join(", ")}`,
-  ];
+  const marketInsights: string[] = [];
+  if (market) {
+    if (market.strengths?.length) marketInsights.push(`Strengths: ${market.strengths.join(", ")}`);
+    if (market.weaknesses?.length) marketInsights.push(`Weaknesses: ${market.weaknesses.join(", ")}`);
+    if (market.competitors?.length) marketInsights.push(`Competitors: ${market.competitors.join(", ")}`);
+  }
 
-  const riskFactors = [
-    "Macroeconomic headwind risks (Placeholder)",
-    "Increased market competition risks (Placeholder)",
-  ];
+  // Derive risk factors and growth catalysts from market, financials, and news programmatically
+  const riskFactors: string[] = [];
+  const growthCatalysts: string[] = [];
 
-  const growthCatalysts = [
-    "Expansion into new business verticals (Placeholder)",
-    "R&D technological leadership (Placeholder)",
-  ];
+  if (market) {
+    market.weaknesses?.forEach((w) => riskFactors.push(`Market Weakness: ${w}`));
+    market.strengths?.forEach((s) => growthCatalysts.push(`Market Strength: ${s}`));
+  }
+
+  if (financials?.debt && financials.debt !== "Not Available") {
+    riskFactors.push(`Leverage profile: Outstanding debt level is ${financials.debt}`);
+  }
+
+  news.forEach((item) => {
+    if (item.impact === "Negative") {
+      riskFactors.push(`Negative News Factor: ${item.title}`);
+    } else if (item.impact === "Positive") {
+      growthCatalysts.push(`Positive News Factor: ${item.title}`);
+    }
+  });
+
+  if (riskFactors.length === 0) {
+    riskFactors.push("No significant risk factors identified during research.");
+  }
+  if (growthCatalysts.length === 0) {
+    growthCatalysts.push("No significant growth catalysts identified during research.");
+  }
+
+  const evidence: EvidenceSummary = {
+    keyFacts,
+    financialHighlights,
+    newsHighlights,
+    marketInsights,
+    riskFactors,
+    growthCatalysts,
+  };
 
   return {
-    evidence: {
-      keyFacts,
-      financialHighlights,
-      newsHighlights,
-      marketInsights,
-      riskFactors,
-      growthCatalysts,
-    },
+    evidence,
   };
 }

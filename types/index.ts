@@ -37,6 +37,8 @@ export interface NewsItem {
   title: string;
   summary: string;
   impact: "Positive" | "Neutral" | "Negative";
+  url?: string;
+  publishedDate?: string;
 }
 
 export interface Source {
@@ -131,6 +133,7 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
  */
 export interface GraphState {
   companyName: string;
+  ticker?: string;
   companyProfile?: CompanyProfile;
   financialData?: FinancialData;
   news?: NewsItem[];

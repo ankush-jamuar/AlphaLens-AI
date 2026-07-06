@@ -17,7 +17,7 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { graph } from "@/langgraph";
+import { graph, runInvestmentAgent } from "@/langgraph";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -76,56 +76,79 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize/reference the LangGraph graph to verify compilation
-    const isGraphReady = typeof graph.invoke === "function";
+    const accept = request.headers.get("accept") || "";
+    const wantStream = accept.includes("text/event-stream") || accept.includes("application/x-ndjson");
 
-    if (!isGraphReady) {
-      throw new Error("LangGraph compilation failed.");
+    if (wantStream) {
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        async start(controller) {
+          const send = (obj: any) => {
+            controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+          };
+
+          try {
+            const initialState = {
+              companyName,
+              errors: [],
+            };
+
+            const eventStream = await graph.stream(initialState, { streamMode: "updates" });
+            for await (const chunk of eventStream) {
+              if (chunk.planning) {
+                send({ type: "progress", step: 0 });
+              } else if (chunk.companyResearch) {
+                send({ type: "progress", step: 1 });
+              } else if (chunk.financialAnalysis) {
+                send({ type: "progress", step: 2 });
+              } else if (chunk.newsAnalysis) {
+                send({ type: "progress", step: 3 });
+              } else if (chunk.marketAssessment) {
+                send({ type: "progress", step: 4 });
+              } else if (chunk.evidenceAggregation) {
+                send({ type: "progress", step: 5 });
+              } else if (chunk.investmentReasoning) {
+                send({ type: "progress", step: 5 });
+              } else if (chunk.reportFormatter) {
+                send({ type: "progress", step: 6 });
+                const report = chunk.reportFormatter.report;
+                if (report) {
+                  send({ type: "report", report });
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Stream execution error:", err);
+            send({
+              type: "error",
+              error: err instanceof Error ? err.message : "Unknown error during streaming execution.",
+            });
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "application/x-ndjson",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
     }
 
-    // Return successful response indicating initialization of the graph
+    // Standard synchronous execution
+    const report = await runInvestmentAgent(companyName);
     return NextResponse.json({
       success: true,
       data: {
-        message: "LangGraph pipeline initialized successfully (Phase 2.1 placeholder).",
-        report: {
-          id: `placeholder-${Date.now()}`,
-          createdAt: new Date().toISOString(),
-          company: {
-            name: companyName,
-            industry: "Technology (Placeholder)",
-            headquarters: "San Francisco, CA (Placeholder)",
-            description: "The LangGraph agent infrastructure has been initialized. In Phase 2.1, the graph is successfully constructed and compiled but not executed. Full execution is scheduled for Phase 2.2.",
-          },
-          financials: {
-            revenue: "N/A",
-            netIncome: "N/A",
-            eps: "N/A",
-            peRatio: "N/A",
-            debt: "N/A",
-            cashFlow: "N/A",
-          },
-          market: {
-            strengths: ["LangGraph architecture setup"],
-            weaknesses: ["Awaiting service execution in Phase 2.2"],
-            competitors: [],
-          },
-          news: [],
-          risks: [],
-          opportunities: [],
-          recommendation: {
-            decision: "Watch",
-            score: 0,
-            confidence: 0,
-            thesis: "The LangGraph graph has been verified, wired, and compiled. Phase 2.1 is complete.",
-            positives: [],
-            negatives: [],
-          },
-          sources: [],
-        },
+        report,
       },
     });
+
   } catch (error) {
+    console.error("API Analyze Error:", error);
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
     return NextResponse.json(
       {

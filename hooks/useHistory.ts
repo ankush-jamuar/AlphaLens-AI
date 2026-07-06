@@ -1,26 +1,48 @@
 "use client";
 
-/**
- * useHistory — Custom hook for managing local analysis history.
- *
- * Milestone 1: Returns mock data. localStorage integration is pending.
- * TODO [Milestone 2]: Replace MOCK_HISTORY with actual localStorage read/write.
- *                     Implement save(), remove(), and persistence logic.
- */
-
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { HistoryEntry, InvestmentReport } from "@/types";
-import { MOCK_HISTORY } from "@/lib/mock-data";
+import { HISTORY_STORAGE_KEY, MAX_HISTORY_SIZE } from "@/lib/constants";
+
+/**
+ * Loads history entries safely from localStorage.
+ */
+function loadFromStorage(): HistoryEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(HISTORY_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("Failed to parse local history storage data, resetting history:", error);
+    return [];
+  }
+}
+
+/**
+ * Persists history entries to localStorage.
+ */
+function saveToStorage(entries: HistoryEntry[]) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries));
+  } catch (error) {
+    console.error("Failed to write history data to localStorage:", error);
+  }
+}
 
 export function useHistory() {
-  // TODO [Milestone 2]: Replace useState(MOCK_HISTORY) with localStorage initialization.
-  // const [history, setHistory] = useState<HistoryEntry[]>(() => loadFromStorage());
-  const [history, setHistory] = useState<HistoryEntry[]>(MOCK_HISTORY);
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+
+  // Load history safely on client mount to bypass SSR mismatches
+  useEffect(() => {
+    setHistory(loadFromStorage());
+  }, []);
 
   /**
-   * Saves a completed report to history.
-   * TODO [Milestone 2]: Implement localStorage persistence.
-   *                     Enforce MAX_HISTORY_SIZE limit by removing oldest entry.
+   * Saves a completed report to local history.
+   * Limits history list size to 20 entries, newest first.
    */
   const save = useCallback((report: InvestmentReport) => {
     const entry: HistoryEntry = {
@@ -33,26 +55,37 @@ export function useHistory() {
     };
 
     setHistory((prev) => {
-      // TODO [Milestone 2]: Also persist to localStorage here.
+      // Remove any existing duplicate entries matching the same ID
       const filtered = prev.filter((h) => h.id !== entry.id);
-      return [entry, ...filtered];
+      const updatedHistory = [entry, ...filtered].slice(0, MAX_HISTORY_SIZE);
+      saveToStorage(updatedHistory);
+      return updatedHistory;
     });
   }, []);
 
   /**
-   * Removes a history entry by ID.
-   * TODO [Milestone 2]: Also remove from localStorage.
+   * Removes a single history entry by ID.
    */
   const remove = useCallback((id: string) => {
-    setHistory((prev) => prev.filter((h) => h.id !== id));
+    setHistory((prev) => {
+      const filtered = prev.filter((h) => h.id !== id);
+      saveToStorage(filtered);
+      return filtered;
+    });
   }, []);
 
   /**
-   * Clears all history.
-   * TODO [Milestone 2]: Also clear localStorage.
+   * Clears all stored reports.
    */
   const clear = useCallback(() => {
     setHistory([]);
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.removeItem(HISTORY_STORAGE_KEY);
+      } catch (error) {
+        console.error("Failed to remove history key from localStorage:", error);
+      }
+    }
   }, []);
 
   return {

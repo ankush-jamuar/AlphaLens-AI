@@ -1,17 +1,8 @@
 "use client";
 
-/**
- * useAnalysis — Custom hook for managing investment analysis state.
- *
- * Milestone 1: Stub implementation. Simulates analysis with mock data.
- * TODO [Milestone 2]: Replace mock simulation with real POST /api/analyze call
- *                     and connect to LangGraph progress streaming.
- */
-
 import { useState, useCallback } from "react";
-import type { AnalysisState } from "@/types";
+import type { AnalysisState, InvestmentReport } from "@/types";
 import { PIPELINE_STEPS } from "@/lib/constants";
-import { MOCK_NVIDIA_REPORT } from "@/lib/mock-data";
 import { validateCompanyName } from "@/utils/format";
 
 const INITIAL_STATE: AnalysisState = {
@@ -26,10 +17,7 @@ export function useAnalysis() {
 
   /**
    * Submits a company name for analysis.
-   *
-   * Milestone 1: Simulates pipeline progress with timeouts using mock data.
-   * TODO [Milestone 2]: Replace with actual fetch to POST /api/analyze.
-   *                     Stream progress events from LangGraph node execution.
+   * Streams progress events from the backend NDJSON route.
    */
   const analyze = useCallback(async (companyName: string) => {
     const validationError = validateCompanyName(companyName);
@@ -40,33 +28,89 @@ export function useAnalysis() {
 
     setState({ status: "loading", report: null, error: null, currentStep: 0 });
 
-    // TODO [Milestone 2]: Remove mock simulation below.
-    // Replace with: const response = await fetch("/api/analyze", { ... })
     try {
-      for (let step = 0; step < PIPELINE_STEPS.length; step++) {
-        await new Promise((resolve) => setTimeout(resolve, 600));
-        setState((prev) => ({ ...prev, currentStep: step }));
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/x-ndjson",
+        },
+        body: JSON.stringify({ companyName }),
+      });
+
+      if (!response.ok) {
+        const errorJson = await response.json().catch(() => null);
+        throw new Error(errorJson?.error?.message || "Failed to initiate research agent.");
       }
 
-      setState({
-        status: "success",
-        report: MOCK_NVIDIA_REPORT,
-        error: null,
-        currentStep: PIPELINE_STEPS.length - 1,
-      });
-    } catch {
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("API streaming response body is not readable.");
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Retain the trailing incomplete line
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+
+          try {
+            const event = JSON.parse(line);
+            
+            if (event.type === "progress") {
+              setState((prev) => ({
+                ...prev,
+                currentStep: Math.min(event.step, PIPELINE_STEPS.length - 1),
+              }));
+            } else if (event.type === "report") {
+              setState({
+                status: "success",
+                report: event.report,
+                error: null,
+                currentStep: PIPELINE_STEPS.length - 1,
+              });
+            } else if (event.type === "error") {
+              throw new Error(event.error);
+            }
+          } catch (jsonError) {
+            console.error("Failed parsing line event chunk:", jsonError, line);
+            // Re-throw critical LLM errors
+            if (jsonError instanceof Error && jsonError.message.includes("LLM_ERROR")) {
+              throw jsonError;
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Analysis hook runtime error:", err);
       setState({
         status: "error",
         report: null,
-        error: "Something went wrong. Please try again.",
+        error: err instanceof Error ? err.message : "An unexpected error occurred during analysis.",
         currentStep: 0,
       });
     }
   }, []);
 
-  /**
-   * Resets analysis state back to idle.
-   */
+  const selectReport = useCallback((loadedReport: InvestmentReport) => {
+    setState({
+      status: "success",
+      report: loadedReport,
+      error: null,
+      currentStep: PIPELINE_STEPS.length - 1,
+    });
+  }, []);
+
   const reset = useCallback(() => {
     setState(INITIAL_STATE);
   }, []);
@@ -80,6 +124,7 @@ export function useAnalysis() {
     isSuccess: state.status === "success",
     isError: state.status === "error",
     analyze,
+    selectReport,
     reset,
   };
 }

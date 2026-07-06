@@ -29,36 +29,36 @@ export const PIPELINE_STEPS: PipelineStep[] = [
   {
     id: "understanding",
     label: "Understanding company",
-    description: "Researching the business and industry",
+    description: "Validating and normalizing company input",
+  },
+  {
+    id: "company",
+    label: "Researching company",
+    description: "Gathering company overview and core details",
   },
   {
     id: "financial",
-    label: "Collecting financial data",
-    description: "Analyzing revenue, profitability, and balance sheet",
+    label: "Reading financial information",
+    description: "Analyzing financial metrics and health",
   },
   {
     id: "news",
-    label: "Reading latest news",
-    description: "Reviewing recent developments and announcements",
+    label: "Collecting news",
+    description: "Reviewing recent developments and news impact",
   },
   {
     id: "market",
     label: "Evaluating market position",
-    description: "Assessing competitive landscape and market share",
-  },
-  {
-    id: "risks",
-    label: "Assessing investment risks",
-    description: "Identifying key business and financial risks",
+    description: "Assessing competitive position and outlook",
   },
   {
     id: "thesis",
     label: "Building investment thesis",
-    description: "Synthesizing evidence and generating recommendation",
+    description: "Evaluating factors and generating recommendation",
   },
   {
     id: "report",
-    label: "Preparing report",
+    label: "Finalizing report",
     description: "Formatting structured investment report",
   },
 ];

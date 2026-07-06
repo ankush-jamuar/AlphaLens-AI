@@ -11,6 +11,7 @@ import type {
 
 export const GraphStateAnnotation = Annotation.Root({
   companyName: Annotation<string>(),
+  ticker: Annotation<string | undefined>(),
   companyProfile: Annotation<CompanyProfile | undefined>(),
   financialData: Annotation<FinancialData | undefined>(),
   news: Annotation<NewsItem[] | undefined>(),

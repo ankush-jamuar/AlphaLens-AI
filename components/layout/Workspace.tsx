@@ -20,7 +20,7 @@
  *   └── ErrorState (on failure)
  */
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { SearchSection } from "@/components/search/SearchSection";
@@ -34,9 +34,16 @@ import { useHistory } from "@/hooks/useHistory";
 import type { InvestmentReport } from "@/types";
 
 export function Workspace() {
-  const { status, report, error, currentStep, isLoading, analyze, reset } =
+  const { status, report, error, currentStep, isLoading, analyze, selectReport, reset } =
     useAnalysis();
-  const { history } = useHistory();
+  const { history, save } = useHistory();
+
+  // Save successfully completed reports to localStorage automatically
+  useEffect(() => {
+    if (status === "success" && report) {
+      save(report);
+    }
+  }, [status, report, save]);
 
   const handleAnalyze = useCallback(
     async (companyName: string) => {
@@ -46,12 +53,10 @@ export function Workspace() {
   );
 
   const handleSelectHistoryReport = useCallback(
-    (_selectedReport: InvestmentReport) => {
-      // TODO [Milestone 2]: Load full report from localStorage by ID and inject into analysis state.
-      // For now this resets to idle — report loading from history will be wired in Milestone 2.
-      reset();
+    (selectedReport: InvestmentReport) => {
+      selectReport(selectedReport);
     },
-    [reset]
+    [selectReport]
   );
 
   return (
