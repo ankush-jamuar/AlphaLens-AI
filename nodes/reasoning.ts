@@ -6,10 +6,15 @@ import { z } from "zod";
 /**
  * Investment Reasoning Node
  * Synthesizes aggregated evidence and produces the final investment recommendation.
+ * Performs exactly ONE Gemini structured call.
  */
 export async function reasoningNode(state: GraphState): Promise<Partial<GraphState>> {
+  const startTime = Date.now();
+  console.log("[Reasoning] Gemini reasoning started.");
   const evidence = state.evidence;
   if (!evidence) {
+    const duration = Date.now() - startTime;
+    console.log(`[PerformanceMetrics] Reasoning Node took ${duration}ms (failed)`);
     return {
       errors: ["Reasoning Node failed: No evidence summary available in state."],
     };
@@ -32,7 +37,7 @@ export async function reasoningNode(state: GraphState): Promise<Partial<GraphSta
     });
 
     const promptText = reasoningPrompt(state.companyName, evidence);
-    const result = await geminiService.generateStructuredOutput<z.infer<typeof schema>>(promptText, schema);
+    const result = await geminiService.generateStructured<z.infer<typeof schema>>(promptText, schema);
 
     // Update riskFactors and growthCatalysts dynamically with Gemini's reasoning outputs
     const updatedEvidence = {
@@ -40,6 +45,10 @@ export async function reasoningNode(state: GraphState): Promise<Partial<GraphSta
       riskFactors: result.risks.length > 0 ? result.risks : evidence.riskFactors,
       growthCatalysts: result.growthOpportunities.length > 0 ? result.growthOpportunities : evidence.growthCatalysts,
     };
+
+    const duration = Date.now() - startTime;
+    console.log(`[PerformanceMetrics] Reasoning Node took ${duration}ms`);
+    console.log("[Reasoning] Gemini reasoning completed.");
 
     return {
       recommendation: {
@@ -54,6 +63,8 @@ export async function reasoningNode(state: GraphState): Promise<Partial<GraphSta
     };
   } catch (error) {
     console.error("Reasoning node execution failed:", error);
+    const duration = Date.now() - startTime;
+    console.log(`[PerformanceMetrics] Reasoning Node took ${duration}ms (failed)`);
     return {
       errors: [`Investment Reasoning Node failed: ${error instanceof Error ? error.message : "Unknown error"}`],
     };

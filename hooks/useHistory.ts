@@ -37,7 +37,10 @@ export function useHistory() {
 
   // Load history safely on client mount to bypass SSR mismatches
   useEffect(() => {
-    setHistory(loadFromStorage());
+    const timer = setTimeout(() => {
+      setHistory(loadFromStorage());
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   /**

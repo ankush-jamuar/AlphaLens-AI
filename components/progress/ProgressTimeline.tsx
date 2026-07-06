@@ -4,7 +4,6 @@
  * ProgressTimeline — Animated pipeline progress display.
  *
  * Milestone 1: Shows placeholder progress animation with mock step timing.
- * TODO [Milestone 2]: Receive real step index from LangGraph node execution events.
  *
  * Each step maps to a LangGraph node (LANGGRAPH_DESIGN.md).
  */

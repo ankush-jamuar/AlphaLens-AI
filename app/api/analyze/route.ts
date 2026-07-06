@@ -1,15 +1,6 @@
 /**
  * POST /api/analyze — Investment Analysis Endpoint
  *
- * Milestone 1: Returns 501 Not Implemented with structured JSON.
- *
- * TODO [Milestone 2]: Replace stub with full LangGraph investment agent:
- *   1. Import and validate request using Zod
- *   2. Initialize LangGraph Investment Agent (see langgraph/graph.ts)
- *   3. Execute graph: await runInvestmentAgent(companyName)
- *   4. Return structured InvestmentReport
- *   5. Handle node failures gracefully
- *
  * Request:  POST /api/analyze   { companyName: string }
  * Response: { success: boolean, data?: { report }, error?: { code, message } }
  *
@@ -17,7 +8,8 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { graph, runInvestmentAgent } from "@/langgraph";
+import { graph, runInvestmentAgent, finalReportCache } from "@/langgraph";
+import { validateEnv } from "@/lib/env-validator";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -33,6 +25,7 @@ interface AnalyzeRequest {
 
 export async function POST(request: NextRequest) {
   try {
+    validateEnv();
     const body = await request.json() as AnalyzeRequest;
     const companyName = body?.companyName?.trim();
 
@@ -81,13 +74,28 @@ export async function POST(request: NextRequest) {
 
     if (wantStream) {
       const encoder = new TextEncoder();
+      let isClosed = false;
       const stream = new ReadableStream({
         async start(controller) {
-          const send = (obj: any) => {
-            controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+          const send = (obj: Record<string, unknown>) => {
+            if (isClosed) return;
+            try {
+              controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+            } catch (err) {
+              console.warn("Stream enqueue failed, probably closed/aborted:", err);
+            }
           };
 
           try {
+            const key = companyName.trim().toLowerCase();
+            const cachedEntry = finalReportCache.get(key);
+            if (cachedEntry && Date.now() - cachedEntry.timestamp < (15 * 60 * 1000)) {
+              console.log(`[Cache] Report reused for ${companyName}`);
+              send({ type: "progress", step: 6 });
+              send({ type: "report", report: cachedEntry.report });
+              return;
+            }
+
             const initialState = {
               companyName,
               errors: [],
@@ -95,6 +103,7 @@ export async function POST(request: NextRequest) {
 
             const eventStream = await graph.stream(initialState, { streamMode: "updates" });
             for await (const chunk of eventStream) {
+              if (isClosed) break;
               if (chunk.planning) {
                 send({ type: "progress", step: 0 });
               } else if (chunk.companyResearch) {
@@ -113,6 +122,7 @@ export async function POST(request: NextRequest) {
                 send({ type: "progress", step: 6 });
                 const report = chunk.reportFormatter.report;
                 if (report) {
+                  finalReportCache.set(key, { report, timestamp: Date.now() });
                   send({ type: "report", report });
                 }
               }
@@ -124,9 +134,17 @@ export async function POST(request: NextRequest) {
               error: err instanceof Error ? err.message : "Unknown error during streaming execution.",
             });
           } finally {
-            controller.close();
+            isClosed = true;
+            try {
+              controller.close();
+            } catch {
+              // ignore if already closed
+            }
           }
         },
+        cancel() {
+          isClosed = true;
+        }
       });
 
       return new Response(stream, {
@@ -140,6 +158,7 @@ export async function POST(request: NextRequest) {
 
     // Standard synchronous execution
     const report = await runInvestmentAgent(companyName);
+
     return NextResponse.json({
       success: true,
       data: {
@@ -150,6 +169,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("API Analyze Error:", error);
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
+    console.log({
+      GEMINI: !!process.env.GEMINI_API_KEY,
+      ALPHA: !!process.env.ALPHA_VANTAGE_API_KEY,
+      GNEWS: !!process.env.GNEWS_API_KEY,
+    });
     return NextResponse.json(
       {
         success: false,

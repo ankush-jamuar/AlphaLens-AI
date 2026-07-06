@@ -1,11 +1,21 @@
 import type { CompanyProfile } from "@/types";
-import { fetchAlphaVantage } from "./financial.service";
+import { fetchAlphaVantage, type AlphaVantageOverview } from "./financial.service";
 import { geminiService } from "./gemini.service";
+import { companyPrompt } from "@/prompts/company";
 import { z } from "zod";
+
+interface CacheEntry {
+  data: CompanyProfile;
+  timestamp: number;
+}
+
+const companyCache = new Map<string, CacheEntry>();
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Company Research Service Wrapper
  * Fetches basic company metadata and details from Alpha Vantage.
+ * Uses Gemini as fallback only if Alpha Vantage fails.
  */
 export interface CompanyService {
   getCompanyProfile(companyName: string, ticker?: string): Promise<CompanyProfile>;
@@ -13,14 +23,28 @@ export interface CompanyService {
 
 export class CompanyServiceImpl implements CompanyService {
   async getCompanyProfile(companyName: string, ticker?: string): Promise<CompanyProfile> {
+    const key = companyName.trim().toLowerCase();
+    
+    // Check cached profile
+    const entry = companyCache.get(key);
+    if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
+      console.log("[Company] Cache hit.");
+      return entry.data;
+    }
+
     const symbol = ticker || companyName;
     try {
-      const data = await fetchAlphaVantage({
+      const overviewResult = await fetchAlphaVantage({
         function: "OVERVIEW",
         symbol: symbol,
       });
+      const data = overviewResult as AlphaVantageOverview;
 
-      return {
+      if (!data.Name && !data.Symbol && !data.Description) {
+        throw new Error("Invalid response from Alpha Vantage Overview API.");
+      }
+
+      const result: CompanyProfile = {
         name: data.Name || companyName,
         ticker: data.Symbol || ticker,
         industry: data.Industry || "Unknown",
@@ -28,9 +52,17 @@ export class CompanyServiceImpl implements CompanyService {
         description: data.Description || "Overview description not available.",
         marketCap: data.MarketCapitalization ? `$${(Number(data.MarketCapitalization) / 1e9).toFixed(2)}B` : "Not Available",
       };
+
+      companyCache.set(key, { data: result, timestamp: Date.now() });
+      return result;
     } catch (error) {
-      console.warn(`Alpha Vantage OVERVIEW fetch failed for ${companyName}, falling back to Gemini:`, error);
-      
+      const errMessage = error instanceof Error ? error.message : String(error);
+      if (errMessage.includes("RATE_LIMIT")) {
+        console.warn("[Company] Alpha Vantage rate limit reached. Using Gemini fallback.");
+      } else {
+        console.warn(`[Company] Alpha Vantage fetch failed (${errMessage}). Using Gemini fallback.`);
+      }
+
       try {
         const schema = z.object({
           name: z.string(),
@@ -41,19 +73,10 @@ export class CompanyServiceImpl implements CompanyService {
           marketCap: z.string().optional(),
         });
         
-        const prompt = `Research and provide a company profile summary for the public company "${companyName}" (symbol: ${symbol || "N/A"}).
-Return a structured JSON object matching this schema:
-{
-  "name": "Official Company Name",
-  "ticker": "TICKER",
-  "industry": "Industry Sector",
-  "headquarters": "City, State/Country",
-  "description": "Short description of the company business model.",
-  "marketCap": "Market cap (e.g. $1.5T)"
-}`;
-
-        const geminiResult = await geminiService.generateStructuredOutput<CompanyProfile>(prompt, schema);
-        return {
+        const prompt = companyPrompt(companyName);
+        const geminiResult = await geminiService.generateStructured<CompanyProfile>(prompt, schema);
+        
+        const result: CompanyProfile = {
           name: geminiResult.name || companyName,
           ticker: geminiResult.ticker || ticker,
           industry: geminiResult.industry || "Not Available",
@@ -61,8 +84,11 @@ Return a structured JSON object matching this schema:
           description: geminiResult.description || "Not Available",
           marketCap: geminiResult.marketCap || "Not Available",
         };
+
+        companyCache.set(key, { data: result, timestamp: Date.now() });
+        return result;
       } catch (geminiError) {
-        console.error("Gemini company profile fallback generation failed:", geminiError);
+        console.error("[Company] Gemini fallback failed:", geminiError);
         return {
           name: companyName,
           ticker: ticker,

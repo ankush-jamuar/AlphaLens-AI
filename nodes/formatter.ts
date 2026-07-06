@@ -6,6 +6,9 @@ import type { InvestmentReport, Source } from "@/types";
  * Compiles the GraphState values into the final frontend-ready InvestmentReport.
  */
 export async function formatterNode(state: GraphState): Promise<Partial<GraphState>> {
+  const startTime = Date.now();
+  console.log("[LangGraph] Starting Report formatter node...");
+  
   const profile = state.companyProfile;
   const financials = state.financialData;
   const market = state.marketAnalysis;
@@ -66,6 +69,10 @@ export async function formatterNode(state: GraphState): Promise<Partial<GraphSta
     },
     sources: sources.slice(0, 5), // Keep only top 5 sources
   };
+
+  const duration = Date.now() - startTime;
+  console.log(`[PerformanceMetrics] Formatter Node took ${duration}ms`);
+  console.log("[LangGraph] Report formatter complete.");
 
   return {
     report,

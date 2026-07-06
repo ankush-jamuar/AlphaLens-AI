@@ -128,7 +128,7 @@ export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 // ---------------------------------------------------------------------------
 
 /**
- * TODO [Milestone 2]: This interface maps to the LangGraph graph state.
+ * This interface maps to the LangGraph graph state.
  * Each node reads from and writes to a subset of these fields.
  */
 export interface GraphState {
@@ -145,7 +145,7 @@ export interface GraphState {
 }
 
 /**
- * TODO [Milestone 2]: Built by the Evidence Aggregation node.
+ * Built by the Evidence Aggregation node.
  */
 export interface EvidenceSummary {
   keyFacts: string[];

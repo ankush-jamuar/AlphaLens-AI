@@ -7,6 +7,9 @@ import type { EvidenceSummary } from "@/types";
  * Does not call Gemini/LLM.
  */
 export async function evidenceNode(state: GraphState): Promise<Partial<GraphState>> {
+  const startTime = Date.now();
+  console.log("[LangGraph] Starting Evidence aggregation node...");
+  
   const profile = state.companyProfile;
   const financials = state.financialData;
   const news = state.news ?? [];
@@ -81,6 +84,10 @@ export async function evidenceNode(state: GraphState): Promise<Partial<GraphStat
     riskFactors,
     growthCatalysts,
   };
+
+  const duration = Date.now() - startTime;
+  console.log(`[PerformanceMetrics] Evidence Node took ${duration}ms`);
+  console.log("[LangGraph] Evidence node complete.");
 
   return {
     evidence,
