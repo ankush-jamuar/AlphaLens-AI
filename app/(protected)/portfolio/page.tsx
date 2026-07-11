@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   Briefcase, 
   Plus, 
@@ -170,24 +170,24 @@ export default function PortfolioPage() {
   };
 
   // Calculations
-  const totalCost = holdings.reduce((sum, h) => sum + (h.shares * h.averagePrice), 0);
-  const totalValue = holdings.reduce((sum, h) => sum + (h.shares * (h.currentPrice || h.averagePrice)), 0);
-  const totalGain = totalValue - totalCost;
-  const gainPercentage = totalCost > 0 ? (totalGain / totalCost) * 100 : 0.0;
+  const totalCost = useMemo(() => holdings.reduce((sum, h) => sum + (h.shares * h.averagePrice), 0), [holdings]);
+  const totalValue = useMemo(() => holdings.reduce((sum, h) => sum + (h.shares * (h.currentPrice || h.averagePrice)), 0), [holdings]);
+  const totalGain = useMemo(() => totalValue - totalCost, [totalValue, totalCost]);
+  const gainPercentage = useMemo(() => totalCost > 0 ? (totalGain / totalCost) * 100 : 0.0, [totalGain, totalCost]);
 
   // Chart data
-  const chartData = holdings.map(h => ({
+  const chartData = useMemo(() => holdings.map(h => ({
     name: h.ticker,
     value: h.shares * (h.currentPrice || h.averagePrice),
-  }));
+  })), [holdings]);
 
   // Filtering & Sorting
-  const filteredHoldings = holdings.filter(h =>
+  const filteredHoldings = useMemo(() => holdings.filter(h =>
     h.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
     h.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [holdings, searchQuery]);
 
-  const sortedHoldings = [...filteredHoldings].sort((a, b) => {
+  const sortedHoldings = useMemo(() => [...filteredHoldings].sort((a, b) => {
     let valA: any;
     let valB: any;
 
@@ -215,7 +215,7 @@ export default function PortfolioPage() {
       return sortOrder === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
     }
     return sortOrder === "asc" ? valA - valB : valB - valA;
-  });
+  }), [filteredHoldings, sortBy, sortOrder]);
 
   const COLORS = ["#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"];
 

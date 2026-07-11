@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { 
   FileText, 
@@ -118,13 +118,13 @@ function ReportsContent() {
   }
 
   // Filters
-  const filteredReports = reports.filter(r => {
+  const filteredReports = useMemo(() => reports.filter(r => {
     const matchesSearch = r.companyName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           r.ticker.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRecommendation = filterRecommendation === "All" || r.recommendation === filterRecommendation;
     const matchesFavorite = !filterFavorite || r.favorite;
     return matchesSearch && matchesRecommendation && matchesFavorite;
-  });
+  }), [reports, searchQuery, filterRecommendation, filterFavorite]);
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto overflow-y-auto h-full al-scrollbar relative">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Eye, 
@@ -99,12 +99,12 @@ export default function WatchlistPage() {
   };
 
   // Filter & Sort
-  const filteredList = watchlist.filter(item => 
+  const filteredList = useMemo(() => watchlist.filter(item => 
     item.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
     item.companyName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  ), [watchlist, searchQuery]);
 
-  const sortedList = [...filteredList].sort((a, b) => {
+  const sortedList = useMemo(() => [...filteredList].sort((a, b) => {
     if (sortBy === "ticker") {
       return a.ticker.localeCompare(b.ticker);
     }
@@ -121,7 +121,7 @@ export default function WatchlistPage() {
     if (bFav !== aFav) return bFav - aFav;
 
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  }), [filteredList, sortBy]);
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto overflow-y-auto h-full al-scrollbar">

@@ -51,15 +51,18 @@ export function useUser() {
   };
 }
 
+import { useRouter } from "next/navigation";
+
 export function useAuth() {
   const { isLoaded, userId, signOut } = reactUseAuth();
+  const router = useRouter();
   return {
     isLoaded,
     isSignedIn: !!userId,
     userId,
     signOut,
     openSignIn: () => {
-      window.location.href = "/sign-in";
+      router.push("/sign-in");
     },
   };
 }

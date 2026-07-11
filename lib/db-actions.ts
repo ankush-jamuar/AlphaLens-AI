@@ -131,7 +131,7 @@ export async function syncUserAction(rawData: z.infer<typeof UserSyncSchema>) {
     return { success: true, user };
   } catch (error) {
     console.error("syncUserAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Authentication database sync failed. Please try again later." };
   }
 }
 
@@ -170,7 +170,7 @@ export async function saveReportAction(rawData: z.infer<typeof SaveReportSchema>
     return { success: true, report };
   } catch (error) {
     console.error("saveReportAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to save the intelligence report to database." };
   }
 }
 
@@ -183,7 +183,7 @@ export async function getSavedReportsAction(userId: string) {
     return { success: true, data: reports };
   } catch (error) {
     console.error("getSavedReportsAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to load saved reports.", data: [] };
   }
 }
 
@@ -205,7 +205,7 @@ export async function deleteSavedReportAction(reportId: string) {
     return { success: true };
   } catch (error) {
     console.error("deleteSavedReportAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to delete the saved report." };
   }
 }
 
@@ -220,7 +220,7 @@ export async function toggleFavoriteReportAction(rawData: z.infer<typeof ToggleF
     return { success: true };
   } catch (error) {
     console.error("toggleFavoriteReportAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update report settings." };
   }
 }
 
@@ -259,7 +259,7 @@ export async function addToWatchlistAction(rawData: z.infer<typeof WatchlistSche
     return { success: true, item };
   } catch (error) {
     console.error("addToWatchlistAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to add ticker to watchlist." };
   }
 }
 
@@ -276,7 +276,7 @@ export async function getWatchlistAction(userId: string) {
     return { success: true, data: items };
   } catch (error) {
     console.error("getWatchlistAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to retrieve watchlist.", data: [] };
   }
 }
 
@@ -297,7 +297,7 @@ export async function toggleWatchlistItemAction(rawData: z.infer<typeof ToggleWa
     return { success: true };
   } catch (error) {
     console.error("toggleWatchlistItemAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update watchlist settings." };
   }
 }
 
@@ -319,7 +319,7 @@ export async function removeFromWatchlistAction(id: string) {
     return { success: true };
   } catch (error) {
     console.error("removeFromWatchlistAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to remove item from watchlist." };
   }
 }
 
@@ -354,7 +354,7 @@ export async function addPortfolioHoldingAction(rawData: z.infer<typeof Portfoli
     return { success: true, holding };
   } catch (error) {
     console.error("addPortfolioHoldingAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to add portfolio position to database." };
   }
 }
 
@@ -367,7 +367,7 @@ export async function getPortfolioHoldingsAction(userId: string) {
     return { success: true, data: holdings };
   } catch (error) {
     console.error("getPortfolioHoldingsAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to retrieve portfolio positions.", data: [] };
   }
 }
 
@@ -392,7 +392,7 @@ export async function updatePortfolioHoldingAction(rawData: z.infer<typeof Updat
     return { success: true, holding };
   } catch (error) {
     console.error("updatePortfolioHoldingAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update portfolio position." };
   }
 }
 
@@ -414,7 +414,7 @@ export async function removePortfolioHoldingAction(id: string) {
     return { success: true };
   } catch (error) {
     console.error("removePortfolioHoldingAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to remove portfolio position." };
   }
 }
 
@@ -459,7 +459,7 @@ export async function addRecentAnalysisAction(rawData: z.infer<typeof RecentAnal
     return { success: true, analysis };
   } catch (error) {
     console.error("addRecentAnalysisAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to log recent analysis activity." };
   }
 }
 
@@ -472,7 +472,7 @@ export async function getRecentAnalysesAction(userId: string) {
     return { success: true, data: items };
   } catch (error) {
     console.error("getRecentAnalysesAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to load recent analysis feed.", data: [] };
   }
 }
 
@@ -488,7 +488,7 @@ export async function getSettingsAction(userId: string) {
     return { success: true, data: settings };
   } catch (error) {
     console.error("getSettingsAction error:", error);
-    return { success: false, error: String(error), data: null };
+    return { success: false, error: "Failed to retrieve user settings.", data: null };
   }
 }
 
@@ -508,7 +508,7 @@ export async function updateSettingsAction(rawData: z.infer<typeof SettingsSchem
     return { success: true, settings };
   } catch (error) {
     console.error("updateSettingsAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update settings." };
   }
 }
 
@@ -537,7 +537,7 @@ export async function recordExportAction(rawData: z.infer<typeof ExportHistorySc
     return { success: true, item };
   } catch (error) {
     console.error("recordExportAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to log report export." };
   }
 }
 
@@ -553,7 +553,7 @@ export async function getExportHistoryAction(userId: string) {
     return { success: true, data: history };
   } catch (error) {
     console.error("getExportHistoryAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to retrieve export history.", data: [] };
   }
 }
 
@@ -585,7 +585,7 @@ export async function recordSearchAction(rawData: z.infer<typeof SearchHistorySc
     return { success: true, item };
   } catch (error) {
     console.error("recordSearchAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to log search history details." };
   }
 }
 
@@ -598,7 +598,7 @@ export async function getSearchHistoryAction(userId: string) {
     return { success: true, data: searches };
   } catch (error) {
     console.error("getSearchHistoryAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to retrieve search history.", data: [] };
   }
 }
 
@@ -615,7 +615,7 @@ export async function getNotificationsAction(userId: string) {
     return { success: true, data: notifications };
   } catch (error) {
     console.error("getNotificationsAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to retrieve notifications.", data: [] };
   }
 }
 
@@ -632,7 +632,7 @@ export async function createNotificationAction(userId: string, title: string, de
     return { success: true, notification };
   } catch (error) {
     console.error("createNotificationAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to create user notification." };
   }
 }
 
@@ -645,7 +645,7 @@ export async function markNotificationReadAction(notificationId: string) {
     return { success: true };
   } catch (error) {
     console.error("markNotificationReadAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to update notification state." };
   }
 }
 
@@ -657,7 +657,7 @@ export async function deleteNotificationAction(notificationId: string) {
     return { success: true };
   } catch (error) {
     console.error("deleteNotificationAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to delete notification." };
   }
 }
 
@@ -674,7 +674,7 @@ export async function getChatMessagesAction(userId: string, reportId: string) {
     return { success: true, data: messages };
   } catch (error) {
     console.error("getChatMessagesAction error:", error);
-    return { success: false, error: String(error), data: [] };
+    return { success: false, error: "Failed to load chat history details.", data: [] };
   }
 }
 
@@ -730,7 +730,7 @@ ${text}`;
     return { success: true, userMessage: userMsg, assistantMessage: assistantMsg };
   } catch (error) {
     console.error("sendChatMessageAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to submit assistant message." };
   }
 }
 
@@ -756,7 +756,8 @@ export async function getCurrentPriceAction(ticker: string) {
     
     return { success: false, error: "Price data unavailable." };
   } catch (e) {
-    return { success: false, error: String(e) };
+    console.error("getCurrentPriceAction error:", e);
+    return { success: false, error: "Real-time stock price quote currently unavailable." };
   }
 }
 
@@ -853,6 +854,6 @@ Respond with a JSON object in this exact format:
     };
   } catch (error) {
     console.error("getCompanyComparisonAction error:", error);
-    return { success: false, error: String(error) };
+    return { success: false, error: "Failed to retrieve stock comparison metrics." };
   }
 }

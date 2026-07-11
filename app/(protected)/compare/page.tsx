@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { 
   ArrowLeftRight, 
   Plus, 
@@ -81,7 +81,7 @@ export default function ComparePage() {
   };
 
   // Compile company datasets to render side-by-side
-  const companies = selectedTickers.map(t => customData[t]).filter(Boolean);
+  const companies = useMemo(() => selectedTickers.map(t => customData[t]).filter(Boolean), [selectedTickers, customData]);
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto overflow-y-auto h-full al-scrollbar">

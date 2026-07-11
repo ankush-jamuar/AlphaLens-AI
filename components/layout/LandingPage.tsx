@@ -19,10 +19,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 export function LandingPage() {
+  const router = useRouter();
   const openSignIn = () => {
-    window.location.href = "/sign-in";
+    router.push("/sign-in");
   };
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -149,11 +149,11 @@ export default function DashboardPage() {
   }, [userId]);
 
   // Recommendation Distribution (Invest vs Watch vs Pass)
-  const recommendationData = [
+  const recommendationData = useMemo(() => [
     { name: "Invest", value: savedReports.filter(r => r.recommendation === "Invest").length, color: "#10b981" },
     { name: "Watch", value: savedReports.filter(r => r.recommendation === "Watch").length, color: "#f59e0b" },
     { name: "Pass", value: savedReports.filter(r => r.recommendation === "Pass").length, color: "#ef4444" },
-  ];
+  ], [savedReports]);
 
   const COLORS = ["#10b981", "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b"];
 
@@ -192,7 +192,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex gap-2">
           <Link 
-            href="/"
+            href="/analyze"
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
           >
             <Zap className="w-3.5 h-3.5" />

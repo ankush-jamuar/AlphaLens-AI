@@ -109,6 +109,19 @@ ${report.recommendation.negatives.map((n) => `- ${n}`).join("\n")}
 - **Weaknesses**: ${report.market.weaknesses.join(", ")}
 - **Key Competitors**: ${report.market.competitors.join(", ")}
 
+## Core Risk Analysis
+${report.risks.map((r) => `- ${r}`).join("\n")}
+
+## Strategic Opportunities
+${report.opportunities.map((o) => `- ${o}`).join("\n")}
+
+## Recent News & Sentiments
+${report.news.map((item) => `### ${item.title}
+- **Impact**: ${item.impact}
+- **Summary**: ${item.summary}
+${item.url ? `- **Source URL**: ${item.url}` : ""}
+`).join("\n")}
+
 ## Source Citations
 ${report.sources.map((s) => `- [${s.title}](${s.url})`).join("\n")}
 `;

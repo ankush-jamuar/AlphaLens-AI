@@ -87,10 +87,14 @@ function WorkspaceContent() {
   // Auto-trigger analysis if query parameter ?analyze=TICKER is provided
   const queryToAnalyze = searchParams.get("analyze");
   useEffect(() => {
-    if (queryToAnalyze && status === "idle") {
-      analyze(queryToAnalyze);
+    if (queryToAnalyze) {
+      const currentTicker = report?.company?.ticker?.toLowerCase();
+      const targetTicker = queryToAnalyze.toLowerCase();
+      if (status === "idle" || (status === "success" && currentTicker !== targetTicker)) {
+        analyze(queryToAnalyze);
+      }
     }
-  }, [queryToAnalyze, status, analyze]);
+  }, [queryToAnalyze, status, report, analyze]);
 
   // Load active report's chat history
   useEffect(() => {
@@ -201,7 +205,7 @@ function WorkspaceContent() {
   ];
 
   return (
-    <div className="flex h-[calc(100dvh-64px)] md:h-dvh overflow-hidden w-full bg-zinc-950">
+    <div className="flex h-full w-full overflow-hidden bg-zinc-950">
       
       {/* Panel 1: History Sidebar */}
       <Sidebar

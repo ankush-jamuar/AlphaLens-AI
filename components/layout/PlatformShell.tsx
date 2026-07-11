@@ -21,7 +21,8 @@ import {
   User as UserIcon,
   SearchCode,
   Shield,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth, useUser } from "@/lib/clerk-mock";
@@ -103,7 +104,7 @@ function ProfileDropdown() {
   const handleSignOutClick = async () => {
     setIsOpen(false);
     await signOut();
-    window.location.href = "/";
+    router.push("/");
   };
 
   return (
@@ -267,12 +268,15 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
     }
   }, [userId, isCommandPaletteOpen]);
 
-  // Global hotkey Ctrl+K for command palette
+  // Global hotkey Ctrl+K for command palette & Escape to close modals
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
         e.preventDefault();
         setIsCommandPaletteOpen(prev => !prev);
+      } else if (e.key === "Escape") {
+        setIsCommandPaletteOpen(false);
+        setShowNotifications(false);
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -557,7 +561,11 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
 
           {/* Main workspace container */}
           <main className="flex-1 overflow-hidden relative">
-            {showProtectedOverlay ? (
+            {!isLoaded && isProtected ? (
+              <div className="flex h-full w-full items-center justify-center bg-zinc-950">
+                <Loader2 className="h-8 w-8 animate-spin text-emerald-400" />
+              </div>
+            ) : showProtectedOverlay ? (
               <div className="absolute inset-0 flex items-center justify-center p-6 bg-zinc-950/80 backdrop-blur-md z-30">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
