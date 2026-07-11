@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext, useRef } from "react";
+import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
@@ -24,7 +24,7 @@ import {
   Clock
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth, useUser, UserButton } from "@/lib/clerk-mock";
+import { useAuth, useUser } from "@/lib/clerk-mock";
 import { 
   syncUserAction, 
   getNotificationsAction, 
@@ -58,6 +58,115 @@ export function useToast() {
 }
 
 // ---------------------------------------------------------------------------
+// ProfileDropdown Component
+// ---------------------------------------------------------------------------
+
+function ProfileDropdown() {
+  const { user } = useUser();
+  const { signOut, isSignedIn } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  if (!isSignedIn || !user) {
+    return null;
+  }
+
+  const handleSettingsClick = () => {
+    setIsOpen(false);
+    router.push("/settings");
+  };
+
+  const handleSignOutClick = async () => {
+    setIsOpen(false);
+    await signOut();
+    window.location.href = "/";
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 p-1 rounded-full hover:bg-white/[0.04] border border-white/5 transition-all outline-none cursor-pointer"
+        aria-label="User profile"
+        aria-haspopup="true"
+        aria-expanded={isOpen}
+      >
+        <img
+          src={user.imageUrl}
+          alt={user.fullName || ""}
+          className="w-7 h-7 rounded-full object-cover border border-white/10"
+        />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 mt-2 w-56 rounded-xl border border-white/10 bg-zinc-950 p-2 shadow-2xl z-50 al-glass"
+          >
+            {/* Header info */}
+            <div className="flex items-center gap-3 p-2.5 border-b border-white/5 mb-1.5 select-none">
+              <img
+                src={user.imageUrl}
+                alt={user.fullName || ""}
+                className="w-8 h-8 rounded-full object-cover border border-white/10"
+              />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">{user.fullName}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{user.primaryEmailAddress?.emailAddress}</p>
+              </div>
+            </div>
+
+            {/* Menu items */}
+            <button
+              onClick={handleSettingsClick}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-xs font-semibold text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              Settings
+            </button>
+            <button
+              onClick={handleSignOutClick}
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left text-xs font-semibold text-red-400 hover:bg-red-500/5 transition-all cursor-pointer"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // PlatformShell Component
 // ---------------------------------------------------------------------------
 
@@ -75,7 +184,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const hasSynced = useRef(false);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     if (!userId) return;
     const res = await getNotificationsAction(userId);
     if (res.success && res.data) {
@@ -87,7 +196,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         time: new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       })));
     }
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (userId) {
@@ -97,7 +206,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
     } else {
       setNotifications([]);
     }
-  }, [userId]);
+  }, [userId, fetchNotifications]);
 
   const handleMarkAllRead = async () => {
     if (!userId) return;
@@ -258,118 +367,8 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
               </div>
               <span className="text-[9px] font-mono bg-white/5 border border-white/10 px-1.5 py-0.5 rounded text-muted-foreground">Ctrl+K</span>
             </button>
-
-            <div className="flex items-center justify-between pt-2">
-              <div className="flex items-center gap-3">
-                <UserButton />
-                {isSignedIn && user && (
-                  <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-foreground truncate max-w-[120px]">{user.fullName}</p>
-                    <p className="text-[8px] text-muted-foreground truncate max-w-[120px]">SaaS Member</p>
-                  </div>
-                )}
-                {!isSignedIn && (
-                  <button 
-                    onClick={openSignIn}
-                    className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <UserIcon className="w-4 h-4" />
-                    Sign In
-                  </button>
-                )}
-              </div>
-
-              {/* Notifications */}
-              <div className="relative">
-                <button 
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="p-2 rounded-lg hover:bg-white/[0.04] text-muted-foreground hover:text-foreground transition-all relative border border-transparent hover:border-white/5"
-                >
-                  <Bell className="w-4 h-4" />
-                  {notifications.some(n => !n.read) && (
-                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                  )}
-                </button>
-
-                <AnimatePresence>
-                  {showNotifications && (
-                    <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                        className="absolute right-0 bottom-12 w-80 rounded-xl border border-white/10 bg-zinc-950 p-4 shadow-2xl z-20 al-glass"
-                      >
-                        <div className="flex items-center justify-between pb-2 border-b border-white/5 mb-2">
-                          <p className="text-xs font-bold text-foreground">Notifications</p>
-                          {notifications.some(n => !n.read) && (
-                            <button 
-                              onClick={handleMarkAllRead}
-                              className="text-[9px] font-bold text-emerald-400 hover:underline cursor-pointer"
-                            >
-                              Mark all read
-                            </button>
-                          )}
-                        </div>
-                        <div className="space-y-2 max-h-60 overflow-y-auto al-scrollbar">
-                          {notifications.length === 0 ? (
-                            <p className="text-[10px] text-muted-foreground/50 py-6 text-center">No notifications yet.</p>
-                          ) : (
-                            notifications.map(n => (
-                              <div 
-                                key={n.id} 
-                                onClick={() => !n.read && handleMarkRead(n.id)}
-                                className={cn(
-                                  "p-2 rounded-lg border text-left transition-all relative group cursor-pointer",
-                                  n.read ? "bg-transparent border-transparent" : "bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10"
-                                )}
-                              >
-                                <button
-                                  onClick={(e) => handleDeleteNotification(n.id, e)}
-                                  className="absolute top-2 right-2 p-0.5 rounded hover:bg-white/10 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all cursor-pointer"
-                                  title="Delete notification"
-                                >
-                                  <X className="w-2.5 h-2.5" />
-                                </button>
-                                <p className="text-[10px] font-bold text-foreground pr-4">{n.title}</p>
-                                <p className="text-[9px] text-muted-foreground mt-0.5 pr-4">{n.desc}</p>
-                                <span className="text-[8px] text-muted-foreground/50 block mt-1">{n.time}</span>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
           </div>
         </aside>
-
-        {/* 2. Mobile Nav Header & Menu */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-16 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md al-glass z-40 flex items-center justify-between px-6">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-sm tracking-tight text-foreground">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 border border-emerald-500/25">
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                <path d="M2 10.5L6 4.5L9 8L11 5.5L13 7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <span>AlphaLens</span>
-          </Link>
-
-          <div className="flex items-center gap-3">
-            <UserButton />
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-white/[0.04] text-muted-foreground hover:text-foreground border border-transparent hover:border-white/10"
-            >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
-          </div>
-        </div>
 
         {/* Mobile Navigation Drawer */}
         <AnimatePresence>
@@ -449,7 +448,113 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         </AnimatePresence>
 
         {/* 3. Main Dashboard Body Panel */}
-        <div className="flex-1 flex flex-col overflow-hidden relative z-10 pt-16 md:pt-0">
+        <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+          
+          {/* Top Navigation Bar */}
+          <header className="h-16 border-b border-white/10 bg-zinc-950/80 backdrop-blur-md al-glass px-6 flex items-center justify-between shrink-0 relative z-20">
+            {/* Left side: Mobile Menu Toggle & Brand (on mobile) or Command Palette Shortcut (on desktop) */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 rounded-lg hover:bg-white/[0.04] text-muted-foreground hover:text-foreground border border-transparent hover:border-white/10"
+              >
+                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </button>
+              
+              <Link href="/" className="md:hidden flex items-center gap-2.5 font-bold text-sm tracking-tight text-foreground">
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/15 border border-emerald-500/25">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2 10.5L6 4.5L9 8L11 5.5L13 7" stroke="#34d399" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <span>AlphaLens</span>
+              </Link>
+              
+              <button 
+                onClick={() => setIsCommandPaletteOpen(true)}
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.02] border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-all text-left text-[10px] font-bold cursor-pointer"
+              >
+                <Command className="w-3.5 h-3.5" />
+                <span>Search or run command...</span>
+                <span className="text-[8px] font-mono bg-white/5 border border-white/10 px-1 py-0.5 rounded text-muted-foreground ml-2">Ctrl+K</span>
+              </button>
+            </div>
+
+            {/* Right side: Notifications & Profile Dropdown */}
+            <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <div className="relative">
+                <button 
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 rounded-lg hover:bg-white/[0.04] text-muted-foreground hover:text-foreground transition-all relative border border-transparent hover:border-white/5 cursor-pointer"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  {notifications.some(n => !n.read) && (
+                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                  )}
+                </button>
+
+                <AnimatePresence>
+                  {showNotifications && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowNotifications(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-32px)] rounded-xl border border-white/10 bg-zinc-950 p-4 shadow-2xl z-20 al-glass"
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-white/5 mb-2">
+                          <p className="text-xs font-bold text-foreground">Notifications</p>
+                          {notifications.some(n => !n.read) && (
+                            <button 
+                              onClick={handleMarkAllRead}
+                              className="text-[9px] font-bold text-emerald-400 hover:underline cursor-pointer"
+                            >
+                              Mark all read
+                            </button>
+                          )}
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto al-scrollbar">
+                          {notifications.length === 0 ? (
+                            <p className="text-[10px] text-muted-foreground/50 py-6 text-center">No notifications yet.</p>
+                          ) : (
+                            notifications.map(n => (
+                              <div 
+                                key={n.id} 
+                                onClick={() => !n.read && handleMarkRead(n.id)}
+                                className={cn(
+                                  "p-2 rounded-lg border text-left transition-all relative group cursor-pointer",
+                                  n.read ? "bg-transparent border-transparent" : "bg-emerald-500/5 border-emerald-500/10 hover:bg-emerald-500/10"
+                                )}
+                              >
+                                <button
+                                  onClick={(e) => handleDeleteNotification(n.id, e)}
+                                  className="absolute top-2 right-2 p-0.5 rounded hover:bg-white/10 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all cursor-pointer"
+                                  title="Delete notification"
+                                >
+                                  <X className="w-2.5 h-2.5" />
+                                </button>
+                                <p className="text-[10px] font-bold text-foreground pr-4">{n.title}</p>
+                                <p className="text-[9px] text-muted-foreground mt-0.5 pr-4">{n.desc}</p>
+                                <span className="text-[8px] text-muted-foreground/50 block mt-1">{n.time}</span>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Custom Profile Dropdown */}
+              <ProfileDropdown />
+            </div>
+          </header>
+
           {/* Main workspace container */}
           <main className="flex-1 overflow-hidden relative">
             {showProtectedOverlay ? (
