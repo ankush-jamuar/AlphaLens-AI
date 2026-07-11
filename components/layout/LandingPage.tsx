@@ -18,11 +18,12 @@ import {
   MessageSquare
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/clerk-mock";
 import { cn } from "@/lib/utils";
 
 export function LandingPage() {
-  const { openSignIn } = useAuth();
+  const openSignIn = () => {
+    window.location.href = "/sign-in";
+  };
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
   const features = [

@@ -31,8 +31,6 @@ export const metadata: Metadata = {
   },
 };
 
-import { ClerkProvider } from "@/lib/clerk-mock";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,9 +43,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background text-foreground antialiased" suppressHydrationWarning>
-        <ClerkProvider>
-          {children}
-        </ClerkProvider>
+        {children}
       </body>
     </html>
   );

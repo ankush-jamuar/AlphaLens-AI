@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, createContext, useContext } from "react";
+import React, { useState, useEffect, createContext, useContext, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { 
@@ -73,6 +73,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const hasSynced = useRef(false);
 
   const fetchNotifications = async () => {
     if (!userId) return;
@@ -124,7 +125,8 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
 
   // Sync user info with local Prisma DB on login
   useEffect(() => {
-    if (isSignedIn && user && userId) {
+    if (isSignedIn && user && userId && !hasSynced.current) {
+      hasSynced.current = true;
       syncUserAction({
         id: userId,
         email: user.primaryEmailAddress?.emailAddress || "",
@@ -134,6 +136,8 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
         if (res.success) {
           console.log("[Auth] User synced successfully with local DB.");
           fetchNotifications();
+        } else {
+          hasSynced.current = false; // Reset on failure to allow retry
         }
       });
     }
