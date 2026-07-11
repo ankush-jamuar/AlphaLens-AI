@@ -28,18 +28,16 @@ builder.addEdge("planning", "companyResearch");
 builder.addEdge("planning", "financialAnalysis");
 builder.addEdge("planning", "newsAnalysis");
 
-// Join the parallel research paths at the market analysis node
+// Join the parallel research paths at the market assessment node
 builder.addEdge("companyResearch", "marketAssessment");
 builder.addEdge("financialAnalysis", "marketAssessment");
 builder.addEdge("newsAnalysis", "marketAssessment");
 
-// Proceed sequentially through reasoning and report formatting
+// Proceed sequentially through evidence aggregation, reasoning and formatting
 builder.addEdge("marketAssessment", "evidenceAggregation");
-
 builder.addEdge("evidenceAggregation", "investmentReasoning");
 builder.addEdge("investmentReasoning", "reportFormatter");
 builder.addEdge("reportFormatter", END);
-
 
 // Compile the executable StateGraph
 export const graph = builder.compile();

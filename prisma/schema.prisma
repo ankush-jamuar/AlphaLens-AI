@@ -1,0 +1,144 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id             String             @id
+  email          String             @unique
+  name           String?
+  imageUrl       String?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  savedReports   SavedReport[]
+  watchlist      Watchlist[]
+  holdings       PortfolioHolding[]
+  recentAnalyses RecentAnalysis[]
+  favorites      FavoriteCompany[]
+  settings       UserSettings?
+  exports        ExportHistory[]
+  notifications  Notification[]
+  searches       SearchHistory[]
+  chatMessages   ChatMessage[]
+}
+
+model SavedReport {
+  id             String          @id
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String
+  ticker         String
+  recommendation String          // "Invest" | "Watch" | "Pass"
+  score          Int
+  reportData     String          // Stringified InvestmentReport JSON
+  favorite       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  exports        ExportHistory[]
+  chatMessages   ChatMessage[]
+}
+
+model Watchlist {
+  id          String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker      String
+  companyName String
+  pinned      Boolean  @default(false)
+  favorite    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, ticker])
+}
+
+model PortfolioHolding {
+  id           String   @id
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker       String
+  companyName  String
+  shares       Float
+  averagePrice Float
+  purchaseDate DateTime
+  createdAt    DateTime @default(now())
+}
+
+model RecentAnalysis {
+  id             String   @id
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  companyName    String
+  ticker         String
+  recommendation String
+  score          Int
+  createdAt      DateTime @default(now())
+}
+
+model FavoriteCompany {
+  id          String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker      String
+  companyName String
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, ticker])
+}
+
+model UserSettings {
+  id                   String   @id
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme                String   @default("dark")
+  exportFormat         String   @default("pdf")
+  language             String   @default("en")
+  notificationsEnabled Boolean  @default(true)
+  createdAt            DateTime @default(now())
+}
+
+model ExportHistory {
+  id        String      @id
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportId  String
+  report    SavedReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  format    String
+  createdAt DateTime    @default(now())
+}
+
+model Notification {
+  id        String   @id
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  desc      String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SearchHistory {
+  id          String   @id
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticker      String
+  companyName String
+  count       Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, ticker])
+}
+
+model ChatMessage {
+  id        String      @id
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reportId  String
+  report    SavedReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  sender    String      // "user" | "assistant"
+  text      String
+  createdAt DateTime    @default(now())
+}

@@ -1,9 +1,8 @@
 "use client";
 
 /**
- * HistoryList — Scrollable list of up to 20 previous analyses.
- * Reads history from useHistory hook (passed as prop from Workspace).
- * No direct localStorage access here (COMPONENT_TREE.md).
+ * HistoryList — Scrollable list of previous analyses.
+ * Reads history from useHistory hook.
  */
 
 import { AnimatePresence } from "framer-motion";
@@ -23,24 +22,18 @@ export function HistoryList({
   activeId,
 }: HistoryListProps) {
   if (history.length === 0) {
-    return (
-      <p className="py-4 text-center text-xs text-muted-foreground">
-        No analyses yet.
-        <br />
-        Search a company to start.
-      </p>
-    );
+    return null;
   }
 
   return (
-    <div className="al-scrollbar h-full overflow-y-auto space-y-1 pr-0.5">
+    <div className="space-y-1">
       <AnimatePresence initial={false}>
         {history.map((entry) => (
           <HistoryItem
             key={entry.id}
             entry={entry}
             onSelect={onSelect}
-            isActive={activeId === entry.id}
+            isActive={activeId === entry.report.id}
           />
         ))}
       </AnimatePresence>

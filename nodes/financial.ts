@@ -3,7 +3,7 @@ import { financialService } from "@/services/financial.service";
 
 /**
  * Financial Analysis Node
- * Retrieves financial metrics for the company.
+ * Retrieves financial metrics for the company using the resolved ticker.
  */
 export async function financialNode(state: GraphState): Promise<Partial<GraphState>> {
   const startTime = Date.now();
@@ -12,7 +12,6 @@ export async function financialNode(state: GraphState): Promise<Partial<GraphSta
     const financialData = await financialService.getFinancialData(state.companyName, state.ticker);
     const duration = Date.now() - startTime;
     console.log(`[PerformanceMetrics] Financial Node took ${duration}ms`);
-    console.log("[LangGraph] Financial node complete.");
     return {
       financialData,
     };
@@ -21,6 +20,14 @@ export async function financialNode(state: GraphState): Promise<Partial<GraphSta
     const duration = Date.now() - startTime;
     console.log(`[PerformanceMetrics] Financial Node took ${duration}ms (failed)`);
     return {
+      financialData: {
+        revenue: "Unavailable",
+        netIncome: "Unavailable",
+        eps: "Unavailable",
+        peRatio: "Unavailable",
+        debt: "Unavailable",
+        cashFlow: "Unavailable",
+      },
       errors: [`Financial Analysis Node failed: ${error instanceof Error ? error.message : "Unknown error"}`],
     };
   }

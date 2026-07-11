@@ -1,7 +1,4 @@
 import type { FinancialData } from "@/types";
-import { geminiService } from "./gemini.service";
-import { financialPrompt } from "@/prompts/financial";
-import { z } from "zod";
 
 export interface AlphaVantageOverview {
   RevenueTTM?: string;
@@ -80,7 +77,7 @@ async function retry<T>(
  * Performs timeout protection (15s), in-memory caching, in-progress promise sharing, and 1 retry.
  */
 export async function fetchAlphaVantage(params: Record<string, string>): Promise<Record<string, unknown>> {
-  const symbol = (params.symbol || "").trim().toLowerCase();
+  const symbol = (params.symbol || "").trim().toUpperCase();
   const func = params.function || "";
   const cacheKey = `${func}:${symbol}`;
 
@@ -88,7 +85,7 @@ export async function fetchAlphaVantage(params: Record<string, string>): Promise
   if (symbol && func) {
     const entry = alphaVantageCache.get(cacheKey);
     if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
-      console.log(`[Financial] Using cached response for ${func}.`);
+      console.log(`[Financial] Using cached raw response for ${func}:${symbol}`);
       return entry.data;
     }
   }
@@ -113,7 +110,7 @@ export async function fetchAlphaVantage(params: Record<string, string>): Promise
     const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
 
     try {
-      console.log(`[Financial] Alpha Vantage request for ${func}.`);
+      console.log(`[Financial] Alpha Vantage request for ${func}:${symbol}`);
       const response = await fetch(url, { signal: controller.signal });
       clearTimeout(timeoutId);
 
@@ -162,7 +159,8 @@ export async function fetchAlphaVantage(params: Record<string, string>): Promise
 
 /**
  * Financial Data Service Wrapper
- * Fetches company financial statements from Alpha Vantage with structured Gemini fallbacks.
+ * Fetches company financial statements from Alpha Vantage using the resolved ticker.
+ * Graceful degradation without Gemini.
  */
 export interface FinancialService {
   getFinancialData(companyName: string, ticker?: string): Promise<FinancialData>;
@@ -170,154 +168,129 @@ export interface FinancialService {
 
 export class FinancialServiceImpl implements FinancialService {
   async getFinancialData(companyName: string, ticker?: string): Promise<FinancialData> {
-    const key = companyName.trim().toLowerCase();
-    
+    const symbol = (ticker || "").trim().toUpperCase();
+    const cacheKey = symbol || companyName.trim().toLowerCase();
+
     // Check cached FinancialData
-    const cachedEntry = financialDataCache.get(key);
-    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL) {
-      console.log("[Financial] Cache hit.");
-      return cachedEntry.data;
+    if (cacheKey) {
+      const cachedEntry = financialDataCache.get(cacheKey);
+      if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL) {
+        console.log(`[Financial] Cache hit for key: ${cacheKey}`);
+        return cachedEntry.data;
+      }
     }
 
-    const symbol = ticker || companyName;
+    if (!symbol) {
+      console.warn("[Financial] No resolved ticker available. Returning default financial details.");
+      return this.getFallbackFinancials();
+    }
+
+    // Default values representing graceful degradation
+    let revenue: string = "Unavailable";
+    let netIncome: string = "Unavailable";
+    let eps: string = "Unavailable";
+    let peRatio: string = "Unavailable";
+    let debt: string = "Unavailable";
+    let cashFlow: string = "Unavailable";
+
+    // 1. Fetch Overview (for EPS, PE, and fallback Revenue)
     try {
-      // Fetch overview data (contains basic metrics)
+      console.log(`[Financial] Fetching OVERVIEW for ${symbol}`);
       const overviewResult = await fetchAlphaVantage({ function: "OVERVIEW", symbol });
       const overview = overviewResult as AlphaVantageOverview;
       
-      let revenue = overview.RevenueTTM ? `$${(Number(overview.RevenueTTM) / 1e9).toFixed(2)}B` : undefined;
-      const eps = overview.EPS || undefined;
-      const peRatio = overview.PERatio || undefined;
-      let netIncome = undefined;
-      let debt = undefined;
-      let cashFlow = undefined;
-
-      // Try fetching Income Statement
-      try {
-        const incomeStatementResult = await fetchAlphaVantage({ function: "INCOME_STATEMENT", symbol });
-        const incomeStatement = incomeStatementResult as AlphaVantageStatements;
-        const annualReports = incomeStatement.annualReports || [];
-        if (annualReports.length > 0) {
-          const latestReport = annualReports[0];
-          revenue = revenue || (latestReport.totalRevenue ? `$${(Number(latestReport.totalRevenue) / 1e9).toFixed(2)}B` : undefined);
-          netIncome = latestReport.netIncome ? `$${(Number(latestReport.netIncome) / 1e9).toFixed(2)}B` : undefined;
-        }
-      } catch (e) {
-        console.warn("Alpha Vantage INCOME_STATEMENT failed:", e);
+      if (overview.EPS) eps = overview.EPS;
+      if (overview.PERatio) peRatio = overview.PERatio;
+      if (overview.RevenueTTM) {
+        revenue = `$${(Number(overview.RevenueTTM) / 1e9).toFixed(2)}B`;
       }
-
-      // Try fetching Balance Sheet
-      try {
-        const balanceSheetResult = await fetchAlphaVantage({ function: "BALANCE_SHEET", symbol });
-        const balanceSheet = balanceSheetResult as AlphaVantageStatements;
-        const annualReports = balanceSheet.annualReports || [];
-        if (annualReports.length > 0) {
-          const latestReport = annualReports[0];
-          const totalDebt = Number(latestReport.shortLongTermDebtTotal || 0) + Number(latestReport.longTermDebt || 0);
-          debt = totalDebt > 0 ? `$${(totalDebt / 1e9).toFixed(2)}B` : undefined;
-        }
-      } catch (e) {
-        console.warn("Alpha Vantage BALANCE_SHEET failed:", e);
-      }
-
-      // Try fetching Cash Flow Statement
-      try {
-        const cashFlowStatementResult = await fetchAlphaVantage({ function: "CASH_FLOW", symbol });
-        const cashFlowStatement = cashFlowStatementResult as AlphaVantageStatements;
-        const annualReports = cashFlowStatement.annualReports || [];
-        if (annualReports.length > 0) {
-          const latestReport = annualReports[0];
-          cashFlow = latestReport.operatingCashflow ? `$${(Number(latestReport.operatingCashflow) / 1e9).toFixed(2)}B` : undefined;
-        }
-      } catch (e) {
-        console.warn("Alpha Vantage CASH_FLOW failed:", e);
-      }
-
-      // If key fields are missing, raise exception to trigger Gemini fallback
-      if (!revenue && !eps && !peRatio) {
-        throw new Error("Essential financial data missing from Alpha Vantage overview response.");
-      }
-
-      // If line-item financial statements failed, fall back to Gemini to fill only the missing fields
-      if (!revenue || !netIncome || !eps || !peRatio || !debt || !cashFlow) {
-        console.log("[Financial] Missing line-item financial data. Using Gemini fallback for missing fields.");
-        const geminiResult = await this.getGeminiFinancialsFallback(companyName, symbol, revenue, eps, peRatio);
-        const result: FinancialData = {
-          revenue: revenue || geminiResult.revenue || "Not Available",
-          netIncome: netIncome || geminiResult.netIncome || "Not Available",
-          eps: eps || geminiResult.eps || "Not Available",
-          peRatio: peRatio || geminiResult.peRatio || "Not Available",
-          debt: debt || geminiResult.debt || "Not Available",
-          cashFlow: cashFlow || geminiResult.cashFlow || "Not Available",
-        };
-        financialDataCache.set(key, { data: result, timestamp: Date.now() });
-        return result;
-      }
-
-      const result: FinancialData = {
-        revenue,
-        netIncome,
-        eps,
-        peRatio,
-        debt,
-        cashFlow,
-      };
-
-      financialDataCache.set(key, { data: result, timestamp: Date.now() });
-      return result;
-    } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error);
-      if (errMessage.includes("RATE_LIMIT")) {
-        console.warn("[Financial] Alpha Vantage rate limit reached. Using Gemini fallback.");
-      } else {
-        console.warn(`[Financial] Alpha Vantage fetch failed (${errMessage}). Using Gemini fallback.`);
-      }
-
-      try {
-        const result = await this.getGeminiFinancialsFallback(companyName, symbol);
-        financialDataCache.set(key, { data: result, timestamp: Date.now() });
-        return result;
-      } catch (geminiError) {
-        console.error("[Financial] Gemini fallback failed:", geminiError);
-        return {
-          revenue: "Not Available",
-          netIncome: "Not Available",
-          eps: "Not Available",
-          peRatio: "Not Available",
-          debt: "Not Available",
-          cashFlow: "Not Available",
-        };
-      }
+    } catch (e) {
+      console.warn(`[Financial] OVERVIEW query failed for ${symbol}:`, e);
     }
+
+    // 2. Fetch Income Statement (for actual Revenue and Net Income)
+    try {
+      console.log(`[Financial] Fetching INCOME_STATEMENT for ${symbol}`);
+      const incomeStatementResult = await fetchAlphaVantage({ function: "INCOME_STATEMENT", symbol });
+      const incomeStatement = incomeStatementResult as AlphaVantageStatements;
+      const annualReports = incomeStatement.annualReports || [];
+      if (annualReports.length > 0) {
+        const latestReport = annualReports[0];
+        if (latestReport.totalRevenue) {
+          revenue = `$${(Number(latestReport.totalRevenue) / 1e9).toFixed(2)}B`;
+        }
+        if (latestReport.netIncome) {
+          netIncome = `$${(Number(latestReport.netIncome) / 1e9).toFixed(2)}B`;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Financial] INCOME_STATEMENT failed for ${symbol}:`, e);
+    }
+
+    // 3. Fetch Balance Sheet (for Debt)
+    try {
+      console.log(`[Financial] Fetching BALANCE_SHEET for ${symbol}`);
+      const balanceSheetResult = await fetchAlphaVantage({ function: "BALANCE_SHEET", symbol });
+      const balanceSheet = balanceSheetResult as AlphaVantageStatements;
+      const annualReports = balanceSheet.annualReports || [];
+      if (annualReports.length > 0) {
+        const latestReport = annualReports[0];
+        const shortDebt = Number(latestReport.shortLongTermDebtTotal || 0);
+        const longDebt = Number(latestReport.longTermDebt || 0);
+        const totalDebt = shortDebt + longDebt;
+        if (totalDebt > 0) {
+          debt = `$${(totalDebt / 1e9).toFixed(2)}B`;
+        } else if (latestReport.longTermDebt) {
+          debt = `$${(longDebt / 1e9).toFixed(2)}B`;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Financial] BALANCE_SHEET failed for ${symbol}:`, e);
+    }
+
+    // 4. Fetch Cash Flow Statement (for Operating Cash Flow)
+    try {
+      console.log(`[Financial] Fetching CASH_FLOW for ${symbol}`);
+      const cashFlowStatementResult = await fetchAlphaVantage({ function: "CASH_FLOW", symbol });
+      const cashFlowStatement = cashFlowStatementResult as AlphaVantageStatements;
+      const annualReports = cashFlowStatement.annualReports || [];
+      if (annualReports.length > 0) {
+        const latestReport = annualReports[0];
+        if (latestReport.operatingCashflow) {
+          cashFlow = `$${(Number(latestReport.operatingCashflow) / 1e9).toFixed(2)}B`;
+        }
+      }
+    } catch (e) {
+      console.warn(`[Financial] CASH_FLOW failed for ${symbol}:`, e);
+    }
+
+    const result: FinancialData = {
+      revenue,
+      netIncome,
+      eps,
+      peRatio,
+      debt,
+      cashFlow,
+    };
+
+    // Cache the result if any fields are valid (i.e. not all are "Unavailable")
+    const hasValidData = Object.values(result).some((v) => v !== "Unavailable");
+    if (hasValidData && cacheKey) {
+      financialDataCache.set(cacheKey, { data: result, timestamp: Date.now() });
+    }
+
+    return result;
   }
 
-  private async getGeminiFinancialsFallback(
-    companyName: string,
-    symbol: string,
-    revenue?: string,
-    eps?: string,
-    peRatio?: string
-  ): Promise<FinancialData> {
-    console.log("[Financial] Using Gemini fallback.");
-    const schema = z.object({
-      revenue: z.string().optional(),
-      netIncome: z.string().optional(),
-      eps: z.string().optional(),
-      peRatio: z.string().optional(),
-      debt: z.string().optional(),
-      cashFlow: z.string().optional(),
-    });
-
-    const basePrompt = financialPrompt(companyName);
-    const contextPrompt = `Research and provide key financial metrics for public company "${companyName}" (symbol: ${symbol}).
-${revenue ? `Known Revenue: ${revenue}` : ""}
-${eps ? `Known EPS: ${eps}` : ""}
-${peRatio ? `Known P/E Ratio: ${peRatio}` : ""}
-Fill in all missing fields (revenue, netIncome, eps, peRatio, debt, cashFlow) based on their latest annual financial reports.
-Format all numbers clearly (e.g. $120.5B, $4.50, 28.5).`;
-
-    const prompt = `${basePrompt}\n\nContext and constraints:\n${contextPrompt}`;
-    return await geminiService.generateStructured<FinancialData>(prompt, schema);
+  private getFallbackFinancials(): FinancialData {
+    return {
+      revenue: "Unavailable",
+      netIncome: "Unavailable",
+      eps: "Unavailable",
+      peRatio: "Unavailable",
+      debt: "Unavailable",
+      cashFlow: "Unavailable",
+    };
   }
 }
 

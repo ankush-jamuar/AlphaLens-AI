@@ -1,8 +1,5 @@
 import type { CompanyProfile } from "@/types";
 import { fetchAlphaVantage, type AlphaVantageOverview } from "./financial.service";
-import { geminiService } from "./gemini.service";
-import { companyPrompt } from "@/prompts/company";
-import { z } from "zod";
 
 interface CacheEntry {
   data: CompanyProfile;
@@ -14,8 +11,8 @@ const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 /**
  * Company Research Service Wrapper
- * Fetches basic company metadata and details from Alpha Vantage.
- * Uses Gemini as fallback only if Alpha Vantage fails.
+ * Fetches basic company metadata and details from Alpha Vantage OVERVIEW using resolved ticker.
+ * Graceful degradation if API fails; no Gemini fallbacks.
  */
 export interface CompanyService {
   getCompanyProfile(companyName: string, ticker?: string): Promise<CompanyProfile>;
@@ -23,82 +20,66 @@ export interface CompanyService {
 
 export class CompanyServiceImpl implements CompanyService {
   async getCompanyProfile(companyName: string, ticker?: string): Promise<CompanyProfile> {
-    const key = companyName.trim().toLowerCase();
-    
+    const symbol = (ticker || "").trim().toUpperCase();
+    const cacheKey = symbol || companyName.trim().toLowerCase();
+
     // Check cached profile
-    const entry = companyCache.get(key);
-    if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
-      console.log("[Company] Cache hit.");
-      return entry.data;
+    if (cacheKey) {
+      const entry = companyCache.get(cacheKey);
+      if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
+        console.log(`[Company] Cache hit for key: ${cacheKey}`);
+        return entry.data;
+      }
     }
 
-    const symbol = ticker || companyName;
+    if (!symbol) {
+      console.warn("[Company] No ticker resolved. Returning default company profile.");
+      return this.getFallbackProfile(companyName, ticker);
+    }
+
     try {
+      console.log(`[Company] Querying Alpha Vantage OVERVIEW for symbol: ${symbol}`);
       const overviewResult = await fetchAlphaVantage({
         function: "OVERVIEW",
         symbol: symbol,
       });
+      
       const data = overviewResult as AlphaVantageOverview;
 
-      if (!data.Name && !data.Symbol && !data.Description) {
-        throw new Error("Invalid response from Alpha Vantage Overview API.");
+      if (!data || (!data.Name && !data.Symbol && !data.Description)) {
+        throw new Error("Invalid/empty response from Alpha Vantage Overview API.");
       }
 
       const result: CompanyProfile = {
         name: data.Name || companyName,
-        ticker: data.Symbol || ticker,
-        industry: data.Industry || "Unknown",
-        headquarters: data.Country ? `${data.City || ""}, ${data.Country}` : "Unknown",
-        description: data.Description || "Overview description not available.",
-        marketCap: data.MarketCapitalization ? `$${(Number(data.MarketCapitalization) / 1e9).toFixed(2)}B` : "Not Available",
+        ticker: data.Symbol || symbol,
+        industry: data.Industry || "Unavailable",
+        headquarters: data.Country ? `${data.City || ""}, ${data.Country}`.replace(/^,\s*/, "") : "Unavailable",
+        description: data.Description || "Business overview details are currently unavailable.",
+        marketCap: data.MarketCapitalization ? `$${(Number(data.MarketCapitalization) / 1e9).toFixed(2)}B` : "Unavailable",
       };
 
-      companyCache.set(key, { data: result, timestamp: Date.now() });
+      // Only cache valid responses
+      if (result.industry !== "Unavailable" || result.description !== "Business overview details are currently unavailable.") {
+        companyCache.set(cacheKey, { data: result, timestamp: Date.now() });
+      }
+
       return result;
     } catch (error) {
-      const errMessage = error instanceof Error ? error.message : String(error);
-      if (errMessage.includes("RATE_LIMIT")) {
-        console.warn("[Company] Alpha Vantage rate limit reached. Using Gemini fallback.");
-      } else {
-        console.warn(`[Company] Alpha Vantage fetch failed (${errMessage}). Using Gemini fallback.`);
-      }
-
-      try {
-        const schema = z.object({
-          name: z.string(),
-          ticker: z.string().optional(),
-          industry: z.string(),
-          headquarters: z.string(),
-          description: z.string(),
-          marketCap: z.string().optional(),
-        });
-        
-        const prompt = companyPrompt(companyName);
-        const geminiResult = await geminiService.generateStructured<CompanyProfile>(prompt, schema);
-        
-        const result: CompanyProfile = {
-          name: geminiResult.name || companyName,
-          ticker: geminiResult.ticker || ticker,
-          industry: geminiResult.industry || "Not Available",
-          headquarters: geminiResult.headquarters || "Not Available",
-          description: geminiResult.description || "Not Available",
-          marketCap: geminiResult.marketCap || "Not Available",
-        };
-
-        companyCache.set(key, { data: result, timestamp: Date.now() });
-        return result;
-      } catch (geminiError) {
-        console.error("[Company] Gemini fallback failed:", geminiError);
-        return {
-          name: companyName,
-          ticker: ticker,
-          industry: "Not Available",
-          headquarters: "Not Available",
-          description: "Company overview data is currently unavailable.",
-          marketCap: "Not Available",
-        };
-      }
+      console.warn(`[Company] Alpha Vantage overview fetch failed for ${symbol}:`, error);
+      return this.getFallbackProfile(companyName, symbol);
     }
+  }
+
+  private getFallbackProfile(companyName: string, ticker?: string): CompanyProfile {
+    return {
+      name: companyName,
+      ticker: ticker,
+      industry: "Unavailable",
+      headquarters: "Unavailable",
+      description: "Business overview details are currently unavailable.",
+      marketCap: "Unavailable",
+    };
   }
 }
 

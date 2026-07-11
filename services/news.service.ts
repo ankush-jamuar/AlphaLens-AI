@@ -1,7 +1,4 @@
 import type { NewsItem } from "@/types";
-import { geminiService } from "./gemini.service";
-import { newsPrompt, newsClassificationPrompt } from "@/prompts/news";
-import { z } from "zod";
 
 interface CacheEntry {
   data: NewsItem[];
@@ -13,6 +10,10 @@ interface GNewsArticle {
   description: string;
   url: string;
   publishedAt: string;
+  source?: {
+    name?: string;
+    url?: string;
+  };
 }
 
 const newsCache = new Map<string, CacheEntry>();
@@ -52,10 +53,48 @@ async function retry<T>(
   }
 }
 
+function analyzeSentiment(title: string, description: string): "Positive" | "Neutral" | "Negative" {
+  const text = `${title} ${description}`.toLowerCase();
+  
+  const positiveWords = [
+    "grow", "profit", "record", "beat", "upgrade", "surge", "rise", "expansion", 
+    "innovate", "launch", "partnership", "success", "gain", "positive", "bullish", 
+    "outperform", "dividend", "acquisition", "growth", "up", "strong", "accelerate"
+  ];
+  
+  const negativeWords = [
+    "decline", "loss", "drop", "fail", "down", "warn", "investigation", "lawsuit", 
+    "fine", "penalty", "layoff", "decrease", "shrink", "miss", "risk", "cut", 
+    "negative", "bearish", "underperform", "deficit", "debt", "investigate", 
+    "regulatory", "headwind", "weak", "breach", "vulnerability"
+  ];
+
+  let positiveCount = 0;
+  let negativeCount = 0;
+
+  positiveWords.forEach(word => {
+    const matches = text.split(word).length - 1;
+    positiveCount += matches;
+  });
+
+  negativeWords.forEach(word => {
+    const matches = text.split(word).length - 1;
+    negativeCount += matches;
+  });
+
+  if (positiveCount > negativeCount) {
+    return "Positive";
+  } else if (negativeCount > positiveCount) {
+    return "Negative";
+  } else {
+    return "Neutral";
+  }
+}
+
 /**
  * News Service Wrapper
- * Fetches news from GNews API and uses a single structured Gemini call to summarize and classify sentiment.
- * Uses Gemini generation as a fallback if the API is offline.
+ * Fetches news from GNews API and performs lightweight rule-based sentiment classification.
+ * No Gemini/LLM calls.
  */
 export interface NewsService {
   getRecentNews(companyName: string): Promise<NewsItem[]>;
@@ -68,7 +107,7 @@ export class NewsServiceImpl implements NewsService {
     // Check cached news
     const entry = newsCache.get(key);
     if (entry && Date.now() - entry.timestamp < CACHE_TTL) {
-      console.log("[News] Cache hit.");
+      console.log(`[News] Cache hit for key: ${key}`);
       return entry.data;
     }
 
@@ -82,7 +121,7 @@ export class NewsServiceImpl implements NewsService {
 
     const requestFn = async () => {
       if (!apiKey) {
-        throw new Error("No news API key configured in environment variables.");
+        throw new Error("No GNEWS_API_KEY configured in environment variables.");
       }
       
       const query = encodeURIComponent(`"${companyName}"`);
@@ -92,7 +131,7 @@ export class NewsServiceImpl implements NewsService {
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 seconds timeout
       
       try {
-        console.log(`[News] GNews request for ${companyName}.`);
+        console.log(`[News] GNews request for query: ${companyName}`);
         const response = await fetch(url, { signal: controller.signal });
         clearTimeout(timeoutId);
         
@@ -104,25 +143,22 @@ export class NewsServiceImpl implements NewsService {
         const articles = (data.articles || []) as GNewsArticle[];
         
         if (articles.length === 0) {
-          throw new Error("No news articles found.");
+          throw new Error("No news articles found from GNews API.");
         }
         
-        // Classify all fetched GNews articles using a SINGLE structured Gemini call
-        const schema = z.object({
-          newsItems: z.array(z.object({
-            title: z.string(),
-            summary: z.string(),
-            impact: z.enum(["Positive", "Neutral", "Negative"]),
-            url: z.string(),
-            publishedDate: z.string(),
-          })),
+        const newsItems: NewsItem[] = articles.map(art => {
+          const sentiment = analyzeSentiment(art.title, art.description || "");
+          const sourceName = art.source?.name || "News";
+          return {
+            title: art.title,
+            summary: art.description ? `[Source: ${sourceName}] ${art.description}` : `[Source: ${sourceName}] Recent news updates.`,
+            impact: sentiment,
+            url: art.url,
+            publishedDate: art.publishedAt,
+          };
         });
 
-        console.log(`[News] Classifying ${articles.length} news articles with Gemini...`);
-        const prompt = newsClassificationPrompt(companyName, articles);
-        const result = await geminiService.generateStructured<{ newsItems: NewsItem[] }>(prompt, schema);
-        
-        return result.newsItems;
+        return newsItems;
       } catch (err) {
         clearTimeout(timeoutId);
         throw err;
@@ -135,42 +171,21 @@ export class NewsServiceImpl implements NewsService {
         newsInProgress.delete(key);
         return data;
       })
-      .catch(async (error) => {
+      .catch((error) => {
         newsInProgress.delete(key);
-        
         const errMessage = error instanceof Error ? error.message : String(error);
-        console.warn(`[News] GNews fetch failed (${errMessage}). Using Gemini fallback.`);
+        console.warn(`[News] GNews fetch failed for ${companyName} (${errMessage}). Returning default neutral news.`);
         
-        try {
-          const schema = z.object({
-            newsItems: z.array(z.object({
-              title: z.string(),
-              summary: z.string(),
-              impact: z.enum(["Positive", "Neutral", "Negative"]),
-              url: z.string(),
-              publishedDate: z.string(),
-            })),
-          });
-
-          const prompt = newsPrompt(companyName);
-          const fallbackResult = await geminiService.generateStructured<{ newsItems: NewsItem[] }>(prompt, schema);
-          
-          newsCache.set(key, { data: fallbackResult.newsItems, timestamp: Date.now() });
-          return fallbackResult.newsItems;
-        } catch (geminiError) {
-          console.error("[News] Gemini fallback news generation failed:", geminiError);
-          const fallbackDefault = [
-            {
-              title: `Market updates for ${companyName}`,
-              summary: "Corporate tracking and performance monitoring remain consistent. Real-time news currently unavailable.",
-              impact: "Neutral" as const,
-              url: "https://finance.yahoo.com",
-              publishedDate: new Date().toISOString().split("T")[0],
-            }
-          ];
-          newsCache.set(key, { data: fallbackDefault, timestamp: Date.now() });
-          return fallbackDefault;
-        }
+        const fallbackDefault: NewsItem[] = [
+          {
+            title: `Market updates for ${companyName}`,
+            summary: "No recent news available. Corporate tracking and performance monitoring remain consistent.",
+            impact: "Neutral" as const,
+            url: "https://finance.yahoo.com",
+            publishedDate: new Date().toISOString(),
+          }
+        ];
+        return fallbackDefault;
       });
 
     newsInProgress.set(key, promise);

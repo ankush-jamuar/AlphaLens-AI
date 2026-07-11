@@ -1,18 +1,13 @@
-/**
- * Home Page — / (Investment Workspace)
- *
- * This is the primary and only application page (PROJECT_BLUEPRINT.md Section 7).
- * The workspace opens immediately without authentication.
- */
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { LandingPage } from "@/components/layout/LandingPage";
 
-import { Navbar } from "@/components/layout/Navbar";
-import { Workspace } from "@/components/layout/Workspace";
+export default async function HomePage() {
+  const { userId } = await auth();
 
-export default function HomePage() {
-  return (
-    <div className="flex h-dvh flex-col overflow-hidden">
-      <Navbar />
-      <Workspace />
-    </div>
-  );
+  if (userId) {
+    redirect("/analyze");
+  }
+
+  return <LandingPage />;
 }

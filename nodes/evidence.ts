@@ -29,43 +29,44 @@ export async function evidenceNode(state: GraphState): Promise<Partial<GraphStat
 
   const financialHighlights: string[] = [];
   if (financials) {
-    if (financials.revenue) financialHighlights.push(`Revenue: ${financials.revenue}`);
-    if (financials.netIncome) financialHighlights.push(`Net Income: ${financials.netIncome}`);
-    if (financials.eps) financialHighlights.push(`EPS: ${financials.eps}`);
-    if (financials.peRatio) financialHighlights.push(`P/E Ratio: ${financials.peRatio}`);
-    if (financials.debt) financialHighlights.push(`Debt: ${financials.debt}`);
-    if (financials.cashFlow) financialHighlights.push(`Cash Flow: ${financials.cashFlow}`);
+    financialHighlights.push(`Revenue: ${financials.revenue || "Unavailable"}`);
+    financialHighlights.push(`Net Income: ${financials.netIncome || "Unavailable"}`);
+    financialHighlights.push(`EPS: ${financials.eps || "Unavailable"}`);
+    financialHighlights.push(`P/E Ratio: ${financials.peRatio || "Unavailable"}`);
+    financialHighlights.push(`Debt: ${financials.debt || "Unavailable"}`);
+    financialHighlights.push(`Cash Flow: ${financials.cashFlow || "Unavailable"}`);
   }
 
+  // Preserve news developments in the highlights
   const newsHighlights = news.map(
-    (item) => `${item.title} (Impact: ${item.impact}) — ${item.summary}`
+    (item) => `Title: ${item.title} | Date: ${item.publishedDate || "N/A"} | URL: ${item.url || "N/A"} | Sentiment: ${item.impact} — ${item.summary}`
   );
 
   const marketInsights: string[] = [];
   if (market) {
-    if (market.strengths?.length) marketInsights.push(`Strengths: ${market.strengths.join(", ")}`);
-    if (market.weaknesses?.length) marketInsights.push(`Weaknesses: ${market.weaknesses.join(", ")}`);
+    if (market.strengths?.length) marketInsights.push(`Strengths: ${market.strengths.join(" | ")}`);
+    if (market.weaknesses?.length) marketInsights.push(`Weaknesses: ${market.weaknesses.join(" | ")}`);
     if (market.competitors?.length) marketInsights.push(`Competitors: ${market.competitors.join(", ")}`);
   }
 
-  // Derive risk factors and growth catalysts from market, financials, and news programmatically
+  // Derive initial risk factors and growth catalysts programmatically
   const riskFactors: string[] = [];
   const growthCatalysts: string[] = [];
 
   if (market) {
-    market.weaknesses?.forEach((w) => riskFactors.push(`Market Weakness: ${w}`));
-    market.strengths?.forEach((s) => growthCatalysts.push(`Market Strength: ${s}`));
+    market.weaknesses?.forEach((w) => riskFactors.push(w));
+    market.strengths?.forEach((s) => growthCatalysts.push(s));
   }
 
-  if (financials?.debt && financials.debt !== "Not Available") {
+  if (financials?.debt && financials.debt !== "Unavailable" && financials.debt !== "$0.00B") {
     riskFactors.push(`Leverage profile: Outstanding debt level is ${financials.debt}`);
   }
 
   news.forEach((item) => {
     if (item.impact === "Negative") {
-      riskFactors.push(`Negative News Factor: ${item.title}`);
+      riskFactors.push(`Adverse News: ${item.title}`);
     } else if (item.impact === "Positive") {
-      growthCatalysts.push(`Positive News Factor: ${item.title}`);
+      growthCatalysts.push(`Favorable News: ${item.title}`);
     }
   });
 
@@ -87,8 +88,6 @@ export async function evidenceNode(state: GraphState): Promise<Partial<GraphStat
 
   const duration = Date.now() - startTime;
   console.log(`[PerformanceMetrics] Evidence Node took ${duration}ms`);
-  console.log("[LangGraph] Evidence node complete.");
-
   return {
     evidence,
   };

@@ -1,19 +1,9 @@
 import type { Metadata } from "next";
-import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { APP_NAME } from "@/lib/constants";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+const inter = { variable: "font-sans-local" };
+const geistMono = { variable: "font-mono-local" };
 
 export const metadata: Metadata = {
   title: {
@@ -41,6 +31,8 @@ export const metadata: Metadata = {
   },
 };
 
+import { ClerkProvider } from "@/lib/clerk-mock";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -53,7 +45,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background text-foreground antialiased" suppressHydrationWarning>
-        {children}
+        <ClerkProvider>
+          {children}
+        </ClerkProvider>
       </body>
     </html>
   );

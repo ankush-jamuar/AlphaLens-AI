@@ -64,6 +64,8 @@
    Surface: #18181B
 --------------------------------------------------------------------------- */
 :root {
+  --font-inter: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-geist-mono: 'Geist Mono', monospace;
   --background: #09090b;
   --foreground: #f8fafc;
 
@@ -222,5 +224,54 @@
   .al-scrollbar::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Print Styles
+   Clean PDF export without sidebar, header, or buttons
+--------------------------------------------------------------------------- */
+@media print {
+  html, body, main, .flex {
+    height: auto !important;
+    overflow: visible !important;
+    position: static !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  .no-print,
+  header,
+  aside,
+  form,
+  button,
+  .kbd-hint,
+  .quick-suggestion {
+    display: none !important;
+  }
+  
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    background-color: #ffffff !important;
+  }
+  
+  /* Make all text elements black and backgrounds white for print visibility */
+  .al-glass {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  
+  h1, h2, h3, h4, p, span, li, svg {
+    color: #000000 !important;
+  }
+  
+  .border,
+  .rounded-xl,
+  .rounded-2xl {
+    border-color: #e5e7eb !important;
   }
 }

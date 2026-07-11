@@ -3,7 +3,8 @@ import type { InvestmentReport, Source } from "@/types";
 
 /**
  * Report Formatter Node
- * Compiles the GraphState values into the final frontend-ready InvestmentReport.
+ * Pure TypeScript node that compiles the GraphState values into the final frontend-ready InvestmentReport.
+ * No Gemini/LLM calls.
  */
 export async function formatterNode(state: GraphState): Promise<Partial<GraphState>> {
   const startTime = Date.now();
@@ -19,7 +20,7 @@ export async function formatterNode(state: GraphState): Promise<Partial<GraphSta
   // Build the list of sources based on fetched news URLs
   const sources: Source[] = [];
   news.forEach((item) => {
-    if (item.url) {
+    if (item.url && item.url !== "https://finance.yahoo.com" && item.url !== "https://gnews.io") {
       sources.push({
         title: item.title,
         url: item.url,
@@ -46,11 +47,18 @@ export async function formatterNode(state: GraphState): Promise<Partial<GraphSta
     createdAt: new Date().toISOString(),
     company: profile ?? {
       name: state.companyName,
-      industry: "Not Available",
-      headquarters: "Not Available",
+      industry: "Unavailable",
+      headquarters: "Unavailable",
       description: "Company overview details are currently unavailable.",
     },
-    financials: financials ?? {},
+    financials: financials ?? {
+      revenue: "Unavailable",
+      netIncome: "Unavailable",
+      eps: "Unavailable",
+      peRatio: "Unavailable",
+      debt: "Unavailable",
+      cashFlow: "Unavailable",
+    },
     market: market ?? {
       strengths: [],
       weaknesses: [],

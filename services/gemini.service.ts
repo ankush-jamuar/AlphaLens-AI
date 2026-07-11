@@ -17,7 +17,6 @@ async function retry<T>(
   fn: () => Promise<T>,
   retries: number,
   delayMs: number,
-  factor: number,
   serviceName: string
 ): Promise<T> {
   let attempt = 0;
@@ -40,9 +39,8 @@ async function retry<T>(
       if (attempt > retries || !isTransient) {
         throw error;
       }
-      const waitTime = delayMs * Math.pow(factor, attempt - 1);
-      console.warn(`[${serviceName}] Transient failure (attempt ${attempt}). Retrying in ${waitTime}ms... Error: ${errStr}`);
-      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      console.warn(`[${serviceName}] Transient failure (attempt ${attempt}). Retrying in ${delayMs}ms... Error: ${errStr}`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 }
@@ -52,12 +50,8 @@ async function retry<T>(
  * Manages ChatGoogleGenerativeAI instance and provides completion and structured output.
  */
 export interface GeminiService {
-  healthCheck(): Promise<boolean>;
   generateText(prompt: string): Promise<string>;
   generateStructured<T>(prompt: string, schema: z.ZodSchema<T>): Promise<T>;
-  // For backwards compatibility:
-  generateCompletion(prompt: string): Promise<string>;
-  generateStructuredOutput<T>(prompt: string, schema: z.ZodSchema<T>): Promise<T>;
 }
 
 export class GeminiServiceImpl implements GeminiService {
@@ -79,16 +73,6 @@ export class GeminiServiceImpl implements GeminiService {
     return this.modelInstance;
   }
 
-  async healthCheck(): Promise<boolean> {
-    try {
-      const result = await this.generateText("Please reply with 'OK' if you can read this.");
-      return result.includes("OK");
-    } catch (error) {
-      console.error("[GeminiService] Health Check Failed:", error);
-      return false;
-    }
-  }
-
   async generateText(prompt: string): Promise<string> {
     console.log("[GeminiService] Generating text...");
     const callFn = async () => {
@@ -100,12 +84,11 @@ export class GeminiServiceImpl implements GeminiService {
     };
 
     try {
-      // 30s timeout for Gemini text calls, maximum 2 attempts (1 retry) for transient errors only
+      // 30s timeout, maximum 2 attempts (1 retry) for transient errors
       return await retry(
         () => withTimeout(callFn(), 30000, "Gemini text generation timed out after 30s"),
         1,
         1000,
-        2,
         "GeminiService"
       );
     } catch (error) {
@@ -124,12 +107,11 @@ export class GeminiServiceImpl implements GeminiService {
     };
 
     try {
-      // 30s timeout for Gemini structured calls, maximum 2 attempts (1 retry) for transient errors only
+      // 30s timeout, maximum 2 attempts (1 retry) for transient errors
       return await retry(
         () => withTimeout(callFn(), 30000, "Gemini structured generation timed out after 30s"),
         1,
         1000,
-        2,
         "GeminiService"
       );
     } catch (error) {
@@ -137,15 +119,6 @@ export class GeminiServiceImpl implements GeminiService {
       console.error(`[GeminiService] Structured generation failed: ${errStr}`);
       throw new Error(`LLM_ERROR: Structured output validation failed. ${errStr}`);
     }
-  }
-
-  // Backward compatibility mappings
-  async generateCompletion(prompt: string): Promise<string> {
-    return this.generateText(prompt);
-  }
-
-  async generateStructuredOutput<T>(prompt: string, schema: z.ZodSchema<T>): Promise<T> {
-    return this.generateStructured(prompt, schema);
   }
 }
 

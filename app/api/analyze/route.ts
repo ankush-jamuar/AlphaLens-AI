@@ -11,17 +11,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { graph, runInvestmentAgent, finalReportCache } from "@/langgraph";
 import { validateEnv } from "@/lib/env-validator";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 interface AnalyzeRequest {
   companyName: string;
 }
-
-// ---------------------------------------------------------------------------
-// Route Handler
-// ---------------------------------------------------------------------------
 
 export async function POST(request: NextRequest) {
   try {
@@ -104,6 +96,7 @@ export async function POST(request: NextRequest) {
             const eventStream = await graph.stream(initialState, { streamMode: "updates" });
             for await (const chunk of eventStream) {
               if (isClosed) break;
+
               if (chunk.planning) {
                 send({ type: "progress", step: 0 });
               } else if (chunk.companyResearch) {
@@ -169,11 +162,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("API Analyze Error:", error);
     const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred.";
-    console.log({
-      GEMINI: !!process.env.GEMINI_API_KEY,
-      ALPHA: !!process.env.ALPHA_VANTAGE_API_KEY,
-      GNEWS: !!process.env.GNEWS_API_KEY,
-    });
     return NextResponse.json(
       {
         success: false,
@@ -186,4 +174,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -24,7 +24,7 @@ export function MarketPositionCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: animationDelay, ease: "easeOut" }}
-      className="al-card space-y-5"
+      className="al-glass rounded-2xl border border-border/40 p-6 md:p-8 space-y-6 relative overflow-hidden transition-all duration-300"
     >
       <SectionHeader
         title="Market Position"
@@ -39,7 +39,7 @@ export function MarketPositionCard({
           icon={TrendingUp}
           items={market.strengths}
           colorClass="text-emerald-400"
-          bgClass="bg-emerald-400/10 border-emerald-400/20"
+          bgClass="bg-emerald-500/5 border-emerald-500/10"
           dotClass="bg-emerald-400"
         />
 
@@ -49,7 +49,7 @@ export function MarketPositionCard({
           icon={TrendingDown}
           items={market.weaknesses}
           colorClass="text-red-400"
-          bgClass="bg-red-400/10 border-red-400/20"
+          bgClass="bg-red-500/5 border-red-500/10"
           dotClass="bg-red-400"
         />
 
@@ -58,9 +58,9 @@ export function MarketPositionCard({
           title="Competitors"
           icon={Users}
           items={market.competitors}
-          colorClass="text-blue-400"
-          bgClass="bg-blue-400/10 border-blue-400/20"
-          dotClass="bg-blue-400"
+          colorClass="text-sky-400"
+          bgClass="bg-sky-500/5 border-sky-500/10"
+          dotClass="bg-sky-400"
         />
       </div>
     </motion.div>
@@ -89,14 +89,14 @@ function BulletList({
   dotClass,
 }: BulletListProps) {
   return (
-    <div className={cn("rounded-lg border p-4", bgClass)}>
-      <div className="mb-3 flex items-center gap-2">
-        <Icon className={cn("h-3.5 w-3.5", colorClass)} />
-        <span className={cn("text-xs font-semibold", colorClass)}>{title}</span>
+    <div className={cn("rounded-xl border p-5 shadow-sm transition-all duration-300 hover:bg-white/[0.015]", bgClass)}>
+      <div className="mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
+        <Icon className={cn("h-4 w-4", colorClass)} />
+        <span className={cn("text-xs font-bold uppercase tracking-wider", colorClass)}>{title}</span>
       </div>
-      <ul className="space-y-2">
+      <ul className="space-y-2.5">
         {items.map((item, index) => (
-          <li key={index} className="flex items-start gap-2 text-xs text-muted-foreground">
+          <li key={index} className="flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
             <span
               className={cn(
                 "mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full",

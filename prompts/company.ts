@@ -1,17 +1,7 @@
 /**
  * Company Profile Prompt Template
- * Researches and summarizes company details.
+ * (Retained for reference/compilation but no longer active; service query is programmatic).
  */
 export function companyPrompt(companyName: string): string {
-  return `You are a research analyst. Gather information on the public company: "${companyName}".
-Analyze its industry, headquarters, business model, core products, and major competitors.
-Return a JSON object matching this schema:
-{
-  "name": "${companyName}",
-  "ticker": "TICKER",
-  "industry": "Industry",
-  "headquarters": "City, Country",
-  "description": "Short description of core business and model.",
-  "marketCap": "Market cap estimation"
-}`;
+  return `Equity research instruction set for extracting company overview metadata of: ${companyName}.`;
 }

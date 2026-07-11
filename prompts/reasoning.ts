@@ -5,24 +5,25 @@ import type { EvidenceSummary } from "@/types";
  * Synthesizes all gathered evidence and determines the final recommendation.
  */
 export function reasoningPrompt(companyName: string, evidence: EvidenceSummary): string {
-  return `You are a senior investment committee member. Evaluate the aggregated evidence for: "${companyName}".
-Evidence Summary:
-${JSON.stringify(evidence, null, 2)}
+  return `You are a Junior Equity Analyst at an investment bank. Conduct a professional investment analysis for: "${companyName}".
+Analyze the company based on the following aggregated evidence, including corporate profile, key financial metrics, recent news, and market positioning:
 
-Provide an explainable investment recommendation and evaluation.
-Return a structured JSON object matching this schema:
+---
+EVIDENCE SUMMARY:
+${JSON.stringify(evidence, null, 2)}
+---
+
+Evaluate the financial health, competitive positioning, news sentiment, growth catalysts, and core business risks.
+
+You must output exactly ONE structured JSON response matching the following schema:
 {
   "decision": "Invest" | "Watch" | "Pass",
-  "score": 0-100 (overall investment score),
-  "confidence": 0-100 (overall confidence score),
-  "evidenceQuality": "High" | "Medium" | "Low",
-  "financialConfidence": 0-100 (confidence in financial statements),
-  "marketConfidence": 0-100 (confidence in market analysis),
-  "newsConfidence": 0-100 (confidence in recent news),
-  "thesis": "Detailed investment thesis explanation...",
-  "positives": ["Positive factor 1", "Positive factor 2"],
-  "negatives": ["Negative/Risk factor 1", "Negative/Risk factor 2"],
-  "growthOpportunities": ["Key growth opportunity 1", "Key growth opportunity 2"],
-  "risks": ["Key risk factor 1", "Key risk factor 2"]
+  "score": number (0 to 100, where 80+ is Invest, 60-79 is Watch, <60 is Pass),
+  "confidence": number (0 to 100),
+  "thesis": "A concise, professional investment thesis outlining the core buy/sell/hold logic.",
+  "positives": ["Catalyst 1", "Catalyst 2", ...],
+  "negatives": ["Concern 1", "Concern 2", ...],
+  "risks": ["Key risk factor 1", "Key risk factor 2", ...],
+  "opportunities": ["Key growth opportunity 1", "Key growth opportunity 2", ...]
 }`;
 }

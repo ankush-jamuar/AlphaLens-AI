@@ -23,7 +23,7 @@ export function ErrorState({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center"
+      className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center no-print"
     >
       {/* Icon */}
       <div className="relative mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-red-400/20 bg-red-400/10">

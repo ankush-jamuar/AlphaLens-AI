@@ -5,7 +5,7 @@
  */
 
 import { motion } from "framer-motion";
-import { Rocket } from "lucide-react";
+import { Rocket, Sparkles } from "lucide-react";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 
 interface OpportunitiesCardProps {
@@ -22,28 +22,28 @@ export function OpportunitiesCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: animationDelay, ease: "easeOut" }}
-      className="al-card space-y-4"
+      className="al-glass rounded-2xl border border-border/40 p-6 md:p-8 space-y-6 relative overflow-hidden transition-all duration-300"
     >
       <SectionHeader
-        title="Growth Opportunities"
-        subtitle="Potential catalysts and expansion areas"
+        title="Strategic Growth Catalysts"
+        subtitle="Innovation vectors, addressable market expansion, and positive catalysts"
         icon={Rocket}
       />
 
-      <ul className="space-y-2.5">
+      <div className="grid gap-3 sm:grid-cols-2">
         {opportunities.map((opportunity, index) => (
-          <motion.li
+          <motion.div
             key={index}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: animationDelay + index * 0.05 }}
-            className="flex items-start gap-3 rounded-lg border border-emerald-400/10 bg-emerald-400/5 px-3 py-2.5"
+            className="flex items-start gap-3 rounded-xl border border-emerald-500/10 bg-emerald-500/5 p-4.5 shadow-sm"
           >
-            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-            <span className="text-sm text-muted-foreground">{opportunity}</span>
-          </motion.li>
+            <Sparkles className="h-4.5 w-4.5 text-emerald-400 shrink-0 mt-0.5" />
+            <span className="text-xs text-muted-foreground/80 leading-relaxed font-semibold">{opportunity}</span>
+          </motion.div>
         ))}
-      </ul>
+      </div>
     </motion.div>
   );
 }

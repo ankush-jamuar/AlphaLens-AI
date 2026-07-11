@@ -34,11 +34,11 @@ export function FinancialHealthCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: animationDelay, ease: "easeOut" }}
-      className="al-card space-y-4"
+      className="al-glass rounded-2xl border border-border/40 p-6 md:p-8 space-y-6 relative overflow-hidden transition-all duration-300"
     >
       <SectionHeader
-        title="Financial Health"
-        subtitle="Key financial metrics and ratios"
+        title="Financial Snapshot"
+        subtitle="Key financial metrics and valuation ratios"
         icon={BarChart2}
       />
 
