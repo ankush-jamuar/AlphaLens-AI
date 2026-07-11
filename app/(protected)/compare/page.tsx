@@ -1,11 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { 
-  ArrowLeftRight, 
-  Plus, 
-  X, 
-  TrendingUp, 
+import {
+  ArrowLeftRight,
+  Plus,
+  X,
+  TrendingUp,
   AlertTriangle,
   Loader2,
   HelpCircle
@@ -85,7 +85,7 @@ export default function ComparePage() {
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto overflow-y-auto h-full al-scrollbar">
-      
+
       {/* Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between pb-4 border-b border-white/5">
         <div>
@@ -125,7 +125,7 @@ export default function ComparePage() {
           {selectedTickers.map(t => (
             <div key={t} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/25 bg-emerald-500/5 text-emerald-400 text-xs font-bold font-mono">
               <span>{t}</span>
-              <button 
+              <button
                 onClick={() => handleRemoveTicker(t)}
                 className="hover:bg-emerald-500/20 p-0.5 rounded transition-all cursor-pointer"
               >
@@ -167,7 +167,7 @@ export default function ComparePage() {
                       <h3 className="text-sm font-extrabold text-foreground tracking-tight mt-1.5 truncate max-w-[150px]">{comp.name}</h3>
                     </div>
                     {selectedTickers.length > 1 && (
-                      <button 
+                      <button
                         onClick={() => handleRemoveTicker(comp.ticker)}
                         className="p-1 rounded hover:bg-white/5 text-muted-foreground hover:text-foreground"
                       >
@@ -211,7 +211,7 @@ export default function ComparePage() {
                         ))}
                       </ul>
                     </div>
-                    
+
                     {/* Weaknesses */}
                     <div className="space-y-1">
                       <p className="text-[9px] font-bold text-amber-500 uppercase tracking-widest flex items-center gap-1"><AlertTriangle className="w-3 h-3" /> Risk Factors</p>
@@ -233,8 +233,8 @@ export default function ComparePage() {
                       comp.recommendation === "Invest"
                         ? "bg-emerald-500/5 text-emerald-400 border-emerald-500/20"
                         : comp.recommendation === "Watch"
-                        ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
-                        : "bg-red-500/5 text-red-400 border-red-500/20"
+                          ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
+                          : "bg-red-500/5 text-red-400 border-red-500/20"
                     )}>
                       {comp.recommendation}
                     </span>

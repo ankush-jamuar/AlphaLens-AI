@@ -2,39 +2,39 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Briefcase, 
-  Eye, 
-  FileText, 
-  Zap, 
-  Clock, 
-  Award, 
-  ArrowRight, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Briefcase,
+  Eye,
+  FileText,
+  Zap,
+  Clock,
+  Award,
+  ArrowRight,
   Search,
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { 
-  ResponsiveContainer, 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  PieChart, 
-  Pie, 
-  Cell, 
-  BarChart, 
-  Bar 
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar
 } from "recharts";
 import { useAuth, useUser } from "@/lib/clerk-mock";
-import { 
-  getPortfolioHoldingsAction, 
-  getWatchlistAction, 
-  getSavedReportsAction, 
+import {
+  getPortfolioHoldingsAction,
+  getWatchlistAction,
+  getSavedReportsAction,
   getRecentAnalysesAction,
   getCurrentPriceAction
 } from "@/lib/db-actions";
@@ -179,7 +179,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-7xl mx-auto overflow-y-auto h-full al-scrollbar">
-      
+
       {/* 1. Welcoming Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between pb-4 border-b border-white/5">
         <div>
@@ -191,14 +191,14 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Link 
+          <Link
             href="/analyze"
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
           >
             <Zap className="w-3.5 h-3.5" />
             New Research Analysis
           </Link>
-          <Link 
+          <Link
             href="/compare"
             className="flex items-center gap-2 px-4 py-2.5 bg-white/[0.03] border border-white/10 hover:bg-white/[0.06] text-foreground font-bold text-xs rounded-xl transition-all cursor-pointer"
           >
@@ -272,7 +272,7 @@ export default function DashboardPage() {
 
       {/* 3. Performance & Allocation Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
+
         {/* Portfolio Growth Graph */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 al-glass">
           <h4 className="text-xs font-bold text-muted-foreground/60 uppercase tracking-wider mb-4">Investment Performance Timeline</h4>
@@ -281,13 +281,13 @@ export default function DashboardPage() {
               <AreaChart data={timelineData}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="date" stroke="#4b5563" fontSize={10} tickLine={false} />
                 <YAxis stroke="#4b5563" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `$${v}`} />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }}
                   labelStyle={{ color: "#a1a1aa", fontSize: "10px", fontWeight: "bold" }}
                   itemStyle={{ color: "#10b981", fontSize: "12px", fontWeight: "bold" }}
@@ -318,14 +318,14 @@ export default function DashboardPage() {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }}
                     itemStyle={{ fontSize: "11px", fontWeight: "bold" }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            
+
             {/* Legend list */}
             <div className="space-y-2">
               {portfolioData.map((entry, idx) => (
@@ -344,7 +344,7 @@ export default function DashboardPage() {
 
       {/* 4. Lists Grid (Watchlist preview, Saved Reports, Recent Analyses) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
+
         {/* Watchlist Preview */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 al-glass space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-white/5">
@@ -353,7 +353,7 @@ export default function DashboardPage() {
               View Watchlist <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          
+
           <div className="space-y-3">
             {watchlist.length === 0 ? (
               <p className="text-xs text-muted-foreground/50 py-4 text-center">Your watchlist is empty.</p>
@@ -385,8 +385,8 @@ export default function DashboardPage() {
               <p className="text-xs text-muted-foreground/50 py-4 text-center">No saved reports yet.</p>
             ) : (
               savedReports.map(rep => (
-                <Link 
-                  key={rep.id} 
+                <Link
+                  key={rep.id}
                   href={`/reports?id=${rep.id}`}
                   className="flex justify-between items-center p-2 rounded-xl hover:bg-white/[0.02] border border-transparent hover:border-white/5 transition-all block text-left"
                 >
@@ -399,8 +399,8 @@ export default function DashboardPage() {
                     rep.recommendation === "Invest"
                       ? "bg-emerald-500/5 text-emerald-400 border-emerald-500/20"
                       : rep.recommendation === "Watch"
-                      ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
-                      : "bg-red-500/5 text-red-400 border-red-500/20"
+                        ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
+                        : "bg-red-500/5 text-red-400 border-red-500/20"
                   )}>
                     {rep.recommendation}
                   </span>

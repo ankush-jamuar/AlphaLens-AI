@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { 
-  FileText, 
-  Search, 
-  Trash2, 
-  Star, 
-  ExternalLink, 
-  Loader2, 
-  ChevronRight, 
+import {
+  FileText,
+  Search,
+  Trash2,
+  Star,
+  ExternalLink,
+  Loader2,
+  ChevronRight,
   ChevronLeft,
   X,
   FileCode,
@@ -119,8 +119,8 @@ function ReportsContent() {
 
   // Filters
   const filteredReports = useMemo(() => reports.filter(r => {
-    const matchesSearch = r.companyName.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          r.ticker.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = r.companyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.ticker.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRecommendation = filterRecommendation === "All" || r.recommendation === filterRecommendation;
     const matchesFavorite = !filterFavorite || r.favorite;
     return matchesSearch && matchesRecommendation && matchesFavorite;
@@ -128,11 +128,11 @@ function ReportsContent() {
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto overflow-y-auto h-full al-scrollbar relative">
-      
+
       <AnimatePresence>
         {selectedReportId && parsedReportData ? (
           /* Report Overlay Reader */
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -140,7 +140,7 @@ function ReportsContent() {
           >
             {/* Overlay Navigation Header */}
             <div className="flex justify-between items-center pb-4 border-b border-white/5 mb-6 no-print">
-              <button 
+              <button
                 onClick={() => {
                   setSelectedReportId(null);
                   router.replace("/reports");
@@ -159,7 +159,7 @@ function ReportsContent() {
                   <Download className="w-3.5 h-3.5" />
                   JSON Export
                 </button>
-                <button 
+                <button
                   onClick={() => window.print()}
                   className="flex items-center gap-2 px-3.5 py-2 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-black text-xs rounded-xl shadow-lg shadow-emerald-500/10 transition-all cursor-pointer"
                 >
@@ -219,12 +219,12 @@ function ReportsContent() {
               </select>
             </div>
 
-            <button 
+            <button
               onClick={() => setFilterFavorite(!filterFavorite)}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer",
-                filterFavorite 
-                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400" 
+                filterFavorite
+                  ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                   : "bg-transparent border-white/10 text-muted-foreground hover:text-foreground"
               )}
             >
@@ -293,8 +293,8 @@ function ReportsContent() {
                     report.recommendation === "Invest"
                       ? "bg-emerald-500/5 text-emerald-400 border-emerald-500/20"
                       : report.recommendation === "Watch"
-                      ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
-                      : "bg-red-500/5 text-red-400 border-red-500/20"
+                        ? "bg-amber-500/5 text-amber-400 border-amber-500/20"
+                        : "bg-red-500/5 text-red-400 border-red-500/20"
                   )}>
                     {report.recommendation}
                   </span>

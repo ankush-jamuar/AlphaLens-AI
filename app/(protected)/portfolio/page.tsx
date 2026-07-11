@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { 
-  Briefcase, 
-  Plus, 
-  Trash2, 
-  Edit2, 
-  TrendingUp, 
-  Loader2, 
-  Calendar, 
-  DollarSign, 
-  Percent, 
+import {
+  Briefcase,
+  Plus,
+  Trash2,
+  Edit2,
+  TrendingUp,
+  Loader2,
+  Calendar,
+  DollarSign,
+  Percent,
   Activity,
   ArrowUpRight,
   TrendingDown,
@@ -21,10 +21,10 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from "recharts";
 import { useAuth } from "@/lib/clerk-mock";
-import { 
-  getPortfolioHoldingsAction, 
-  addPortfolioHoldingAction, 
-  updatePortfolioHoldingAction, 
+import {
+  getPortfolioHoldingsAction,
+  addPortfolioHoldingAction,
+  updatePortfolioHoldingAction,
   removePortfolioHoldingAction,
   getCurrentPriceAction
 } from "@/lib/db-actions";
@@ -221,7 +221,7 @@ export default function PortfolioPage() {
 
   return (
     <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto overflow-y-auto h-full al-scrollbar">
-      
+
       {/* Header */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between pb-4 border-b border-white/5">
         <div>
@@ -266,7 +266,7 @@ export default function PortfolioPage() {
 
       {/* Allocations & Form Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
+
         {/* Add/Edit Holding Form */}
         <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 al-glass space-y-4">
           <div className="flex justify-between items-center">
@@ -274,7 +274,7 @@ export default function PortfolioPage() {
               {editingHolding ? "Edit Acquisition" : "Log Acquisition"}
             </h4>
             {editingHolding && (
-              <button 
+              <button
                 onClick={handleCancelEdit}
                 className="text-[10px] text-muted-foreground hover:text-white flex items-center gap-1"
               >
@@ -356,7 +356,7 @@ export default function PortfolioPage() {
 
         {/* Charts & Listings */}
         <div className="lg:col-span-2 space-y-6">
-          
+
           {/* Allocation diagram */}
           {chartData.length > 0 && (
             <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 al-glass flex flex-col justify-between">
@@ -378,7 +378,7 @@ export default function PortfolioPage() {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{ backgroundColor: "#09090b", borderColor: "#27272a", borderRadius: "12px" }}
                         itemStyle={{ fontSize: "11px", fontWeight: "bold" }}
                       />
