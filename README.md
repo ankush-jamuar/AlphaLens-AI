@@ -4,6 +4,16 @@
 
 ---
 
+## 🌐 Quick Links
+
+### 🔗 Live Demo
+https://alpha-lens-ai-six.vercel.app/
+
+### 💻 GitHub Repository
+https://github.com/ankush-jamuar/AlphaLens-AI
+
+---
+
 # Overview
 
 AlphaLens AI is an Agentic Investment Research Platform that analyzes publicly listed companies using a multi-stage AI workflow.
