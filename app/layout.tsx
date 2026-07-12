@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { APP_NAME } from "@/lib/constants";
+import { ClerkProvider } from "@/lib/clerk-mock";
 
 const inter = { variable: "font-sans-local" };
 const geistMono = { variable: "font-mono-local" };
@@ -43,7 +44,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-dvh bg-background text-foreground antialiased" suppressHydrationWarning>
-        {children}
+        <ClerkProvider>{children}</ClerkProvider>
       </body>
     </html>
   );

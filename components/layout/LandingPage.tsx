@@ -20,13 +20,30 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/clerk-mock";
 
 export function LandingPage() {
   const router = useRouter();
+  const { isSignedIn, isLoaded } = useAuth();
+
+  React.useEffect(() => {
+    if (isLoaded && isSignedIn) {
+      router.replace("/analyze");
+    }
+  }, [isLoaded, isSignedIn, router]);
+
   const openSignIn = () => {
     router.push("/sign-in");
   };
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
+
+  if (isLoaded && isSignedIn) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-zinc-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-emerald-500 border-t-transparent" />
+      </div>
+    );
+  }
 
   const features = [
     {

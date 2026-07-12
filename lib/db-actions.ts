@@ -621,6 +621,19 @@ export async function getNotificationsAction(userId: string) {
 
 export async function createNotificationAction(userId: string, title: string, desc: string) {
   try {
+    const existing = await db.notification.findFirst({
+      where: {
+        userId,
+        title,
+        desc,
+      },
+    });
+
+    if (existing) {
+      console.log(`[Notification] Duplicate prevented: ${title} - ${desc}`);
+      return { success: true, notification: existing };
+    }
+
     const notification = await db.notification.create({
       data: {
         id: `not_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,

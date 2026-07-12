@@ -92,6 +92,7 @@ export interface AnalysisState {
   report: InvestmentReport | null;
   error: string | null;
   currentStep: number;
+  isNewAnalysis?: boolean;
 }
 
 // ---------------------------------------------------------------------------

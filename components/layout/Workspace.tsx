@@ -34,7 +34,7 @@ function WorkspaceContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
 
-  const { status, report, error, currentStep, isLoading, analyze, selectReport, reset } =
+  const { status, report, error, currentStep, isLoading, isNewAnalysis, clearNewAnalysis, analyze, selectReport, reset } =
     useAnalysis();
   const { history, save, remove } = useHistory();
 
@@ -117,7 +117,8 @@ function WorkspaceContent() {
 
   // Save successfully completed reports to localStorage and local SQLite DB automatically
   useEffect(() => {
-    if (status === "success" && report) {
+    if (status === "success" && report && isNewAnalysis) {
+      clearNewAnalysis();
       save(report);
       
       // If user is authenticated, sync report & search history to Prisma DB
@@ -151,7 +152,7 @@ function WorkspaceContent() {
         });
       }
     }
-  }, [status, report, save, userId, toast]);
+  }, [status, report, save, userId, toast, isNewAnalysis, clearNewAnalysis]);
 
   const handleAnalyze = useCallback(
     async (companyName: string) => {

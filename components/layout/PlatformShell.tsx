@@ -283,13 +283,13 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const toast = (message: string, type: "success" | "error" | "info" = "success") => {
+  const toast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts(prev => prev.filter(t => t.id !== id));
     }, 4000);
-  };
+  }, []);
 
   const navLinks = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, protected: true },

@@ -10,6 +10,7 @@ const INITIAL_STATE: AnalysisState = {
   report: null,
   error: null,
   currentStep: 0,
+  isNewAnalysis: false,
 };
 
 export function useAnalysis() {
@@ -78,6 +79,7 @@ export function useAnalysis() {
                 report: event.report,
                 error: null,
                 currentStep: PIPELINE_STEPS.length - 1,
+                isNewAnalysis: true,
               });
             } else if (event.type === "error") {
               throw new Error(event.error);
@@ -108,7 +110,12 @@ export function useAnalysis() {
       report: loadedReport,
       error: null,
       currentStep: PIPELINE_STEPS.length - 1,
+      isNewAnalysis: false,
     });
+  }, []);
+
+  const clearNewAnalysis = useCallback(() => {
+    setState((prev) => ({ ...prev, isNewAnalysis: false }));
   }, []);
 
   const reset = useCallback(() => {
@@ -123,6 +130,8 @@ export function useAnalysis() {
     isLoading: state.status === "loading",
     isSuccess: state.status === "success",
     isError: state.status === "error",
+    isNewAnalysis: state.isNewAnalysis,
+    clearNewAnalysis,
     analyze,
     selectReport,
     reset,
